@@ -10,6 +10,7 @@ endif
 
 NAME		=	libft_malloc_$(HOST).so
 SYMB		=	libft_malloc.so
+LIBFTDOR	=	libft/
 LIBFT		=	libft.a
 CC			=	cc
 CFLAGS		=	-Wall -Wextra -Werror -fPIC
@@ -23,7 +24,7 @@ OBJS_DIR	=	objs/
 
 #SOURCES
 
-SRCS_FILES	=	malloc
+SRCS_FILES	=	malloc free realloc utils
 INCL_FILES	=	malloc.h
 
 SRCS 		= 	${addprefix ${SRCS_DIR}, ${addsuffix .c, ${SRCS_FILES}}}

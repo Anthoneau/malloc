@@ -1,7 +1,7 @@
 #include "../includes/malloc.h"
 #include <stdio.h>
 
-void *malloc(size_t size) {
-	printf("size: %zu\n", size);
+void free(void *ptr) {
+	printf("adress: %p\n", ptr);
 	return NULL;
 }
