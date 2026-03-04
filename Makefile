@@ -10,6 +10,7 @@ endif
 
 NAME		=	libft_malloc_$(HOST).so
 SYMB		=	libft_malloc.so
+LNNAME		=	ft_malloc
 LIBFTDOR	=	libft/
 LIBFT		=	libft.a
 CC			=	cc
@@ -24,7 +25,7 @@ OBJS_DIR	=	objs/
 
 #SOURCES
 
-SRCS_FILES	=	malloc free realloc utils
+SRCS_FILES	=	malloc
 INCL_FILES	=	malloc.h
 
 SRCS 		= 	${addprefix ${SRCS_DIR}, ${addsuffix .c, ${SRCS_FILES}}}
@@ -43,12 +44,13 @@ MAKEFLAGS	+=	--no-print-directory
 OBJSF		=	.cache_exists
 
 all:		${SYMB}
-			@echo "${BGREEN}Malloc compiled!${COLOR_END}"
 
 ${SYMB}:	${NAME}
 			@${SYMLINK} ${NAME} ${SYMB}
+			@echo "${BGREEN}Malloc compiled!${COLOR_END}"
 
-${NAME}:	${LIBFT} | ${OBJS}
+#${NAME}:	${LIBFT} | ${OBJS}
+${NAME}:	${OBJS}
 			@${CC} ${LDFLAGS} ${OBJS} -o ${NAME}
 
 ${OBJS_DIR}%.o :	${SRCS_DIR}%.c | ${OBJSF}
@@ -58,9 +60,9 @@ ${OBJS_DIR}%.o :	${SRCS_DIR}%.c | ${OBJSF}
 ${OBJSF}:
 			@mkdir -p ${OBJS_DIR}
 
-${LIBFT}:
-			@make -C libft/
-			@make clean -C libft/
+#${LIBFT}:
+#			@make -C libft/
+#			@make clean -C libft/
 
 clean:
 			@${RM} ${OBJS_DIR}
@@ -75,5 +77,9 @@ fclean:		clean
 			@echo "${BBLUE}Malloc files cleaned!${COLOR_END}"
 
 re:			fclean all
+
+run:		all
+			@cc main.c -o test -L. -l${LNNAME}
+			@LD_LIBRARY_PATH=. ./test
 
 .PHONY:		all clean fclean re
