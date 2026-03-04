@@ -55,7 +55,7 @@ ${NAME}:	${OBJS}
 
 ${OBJS_DIR}%.o :	${SRCS_DIR}%.c | ${OBJSF}
 			@mkdir -p $(dir $@)
-			@${CC} ${CFLAGS} -c $< -o $@
+			@${CC} ${CFLAGS} -g -c $< -o $@
 
 ${OBJSF}:
 			@mkdir -p ${OBJS_DIR}
@@ -79,7 +79,7 @@ fclean:		clean
 re:			fclean all
 
 run:		all
-			@cc main.c -o test -L. -l${LNNAME}
+			@cc main.c -o test -g -L. -l${LNNAME}
 			@LD_LIBRARY_PATH=. ./test
 
 .PHONY:		all clean fclean re
