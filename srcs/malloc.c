@@ -1,14 +1,16 @@
 #include "../includes/malloc.h"
 //#include <stdio.h>
 
+t_alloc g_alloc;
+
 void *malloc(size_t size) {
 	// check size <= 0 avec le vrai malloc
 	//void *c = sbrk(size);
 	//return c == (void*) -1 ? NULL : c;
-	write(1, "grooooooos\n", size);
-	int salut = sysconf(size);
-	(void)salut;
-	return NULL;
+	//write(1, "grooooooos\n", size);
+	//size_t salut = sysconf(_SC_PAGESIZE);
+	void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	return ptr == MAP_FAILED ? NULL : ptr; // MAP_FAILED = (void *) -1
 }
 
 void free(void *ptr) {

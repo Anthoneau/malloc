@@ -11,8 +11,7 @@ endif
 NAME		=	libft_malloc_$(HOST).so
 SYMB		=	libft_malloc.so
 LNNAME		=	ft_malloc
-LIBFTDOR	=	libft/
-LIBFT		=	libft.a
+LIBFT		=	libft/libft.a
 CC			=	cc
 CFLAGS		=	-Wall -Wextra -Werror -fPIC
 LDFLAGS		=	-shared
@@ -49,8 +48,7 @@ ${SYMB}:	${NAME}
 			@${SYMLINK} ${NAME} ${SYMB}
 			@echo "${BGREEN}Malloc compiled!${COLOR_END}"
 
-#${NAME}:	${LIBFT} | ${OBJS}
-${NAME}:	${OBJS}
+${NAME}:	${LIBFT} | ${OBJS}
 			@${CC} ${LDFLAGS} ${OBJS} -o ${NAME}
 
 ${OBJS_DIR}%.o :	${SRCS_DIR}%.c | ${OBJSF}
@@ -60,9 +58,9 @@ ${OBJS_DIR}%.o :	${SRCS_DIR}%.c | ${OBJSF}
 ${OBJSF}:
 			@mkdir -p ${OBJS_DIR}
 
-#${LIBFT}:
-#			@make -C libft/
-#			@make clean -C libft/
+${LIBFT}:
+			@make -C libft/
+			@make clean -C libft/
 
 clean:
 			@${RM} ${OBJS_DIR}
@@ -70,7 +68,6 @@ clean:
 			@echo "${BCYAN}Malloc .o files cleaned!${COLOR_END}"
 
 fclean:		clean
-			@${RM} ${LIBFT}
 			@${RM} ${SYMB}
 			@${RM} ${NAME}
 			@make fclean -C libft/
@@ -79,7 +76,7 @@ fclean:		clean
 re:			fclean all
 
 run:		all
-			@cc main.c -o test -g -L. -l${LNNAME}
+			@cc main.c ${LIBFT} -o test -g -L. -l${LNNAME}
 			@LD_LIBRARY_PATH=. ./test
 
 .PHONY:		all clean fclean re

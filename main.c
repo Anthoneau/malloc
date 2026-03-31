@@ -1,14 +1,68 @@
 #include "includes/malloc.h"
+#include "includes/libft.h"
 #include <stdio.h>
 
+# include <stdlib.h>
+# include <sys/mman.h>
+# include <unistd.h>
+#include <stdint.h>
+
 int main(void) {
-	void *ptr = malloc(12);
-	//write(1, "salut\n", 7);
-	//printf("sysconf dans le main : %ld\n", sysconf(10));
-	if (!ptr){
-		write(1, "pointeur nul\n", 14);
-		return 1;
-	}
-	write(1, "pointeur non nul\n", 18);
+
+	printf("pagesize : %d\n", pagesize);
+
+	//int psize = sysconf(_SC_PAGE_SIZE);
+	//int pflag = PROT_READ | PROT_WRITE;
+	//int type = MAP_PRIVATE | MAP_ANONYMOUS;
+	//uint64_t maxsize = 0x100000000;
+	//void *base = mmap(NULL, maxsize, pflag, type, -1, 0);
+	//munmap(base, maxsize);    
+
+	//char* ptr1 = mmap(base, psize * 10, pflag, type | MAP_FIXED, -1, 0);
+	//void* ptr2 = mmap(base + psize * 10, psize, pflag, type | MAP_FIXED, -1, 0);
+
+	//printf("sizeof ptr1 : %d\naddress : %p\n", sizeof(ptr1), &ptr1);
+	//printf("sizeof ptr2 : %d\naddress : %p\n", sizeof(ptr2), &ptr2);
+	//printf("psize : %d\n", psize);
+
+	//munmap(ptr1, psize*10);
+	//munmap(ptr2, psize);
+
+	//int i = 0;
+	//while (1) {
+	//	ptr1[i] = 'a';
+	//	printf("%d ", i);
+	//	i++;
+	//}
+
+	//write(1, "\n", 1);
+	//char *ptr = (char *)malloc(12);
+	////write(1, "salut\n", 7);
+	////printf("sysconf dans le main : %ld\n", sysconf(10));
+	//if (!ptr){
+	//	write(1, "pointeur nul\n", 14);
+	//	return 1;
+	//}
+	//write(1, "pointeur non nul\n", 18);
+	//char c = '0';
+	//for (int i = 0; i < 4096; i++){
+	//	if (*ptr)
+	//		ft_printf("yo\n");
+	//	if (ptr[i]){
+	//		if (c <= '9') {
+	//			ptr[i] = c;
+	//			c++;
+	//		}
+	//		else {
+	//			ptr[i] = '\n';
+	//			c = '0';
+	//		}
+	//	}
+	//	else {
+	//		ft_printf("%d n'existe pas\n", i);
+	//		break ;
+	//	}
+	//}
+	//write(1, "\n", 1);
 	return 0;
 }

@@ -23,10 +23,16 @@
 	Si c'est vrai, je pense que la variable globale autorisée par le sujet parle d'un tableau de pointeur.
 
 #### de ce que j'ai compris
+
+<br>
+
+##### mmap
+
+<br>
+
 mmap demande au système d'exploitation une page de mémoire. Généralement 4096 sera donnée pour plus de simplicité ? Je ne sais pas mais voici ce que dit le sujet par rapport à ça:
 
->The size of these zones must be a multiple of getpagesize() under macOS or sysconf(_SC_PAGESIZ
-under Linux.
+>The size of these zones must be a multiple of getpagesize() under macOS or sysconf(_SC_PAGESIZE) under Linux.
 
 
 Pour malloc, on utilise mmap(), on doit checker aussi si la size qu'on donne en argument est correct. <br>
@@ -40,9 +46,9 @@ La plupart des projets malloc contiennent une structure `chunk` pour pouvoir tra
 		struct s_chunk *prev;
 	}
 
-Je pense avoir tout mis. Donc `void *data` sera ce qui est renvoyé à l'utilisateur. `int free` est utile seulement pour nous, pour savoir si le chunk actuel est libre ou non (si non on passe on noeud suivant au lieu de renvoyer le chunk occupé). `size_t size` est simplement la taille du chunk actuel. Les deux dernières variables sont ce qui fait la liste doublement chainées. Donc oui c'est ça la liste chaînée de free dont je parlais avant.
+Je pense avoir tout mis. Donc `void *data` sera ce qui est renvoyé à l'utilisateur. `int free` est utile seulement pour nous, pour savoir si le chunk actuel est libre ou non (si non on passe le noeud suivant au lieu de renvoyer le chunk occupé). `size_t size` est simplement la taille du chunk actuel. Les deux dernières variables sont ce qui fait la liste doublement chainées. Donc oui c'est ça la liste chaînée de free dont je parlais avant.
 
-Donc avec mon exemple où l'utilisateur demande un chunk de 1, on a notre chunk de taille 4096 qui est tout seul dans la liste et on vient le split pour avoir un chunk de taille demandé. Avec ça, on a 2 élément dans la liste et si tout va bien, on marque le chunk comme étant utilisé, on lui donne sa taille on renvoit `void *data` depuis le `malloc`.
+Donc avec mon exemple où l'utilisateur demande un chunk de 1, on a notre chunk de taille 4096 qui est tout seul dans la liste et on vient le split pour avoir un chunk de taille demandé. Avec ça, on a 2 éléments dans la liste et si tout va bien, on marque le chunk comme étant utilisé, on lui donne sa taille on renvoit `void *data` depuis le `malloc`.
 
 Si l'utilisateur refait une demande d'allocation de mémoire, par exemple de 100 cette fois ci, alors au lieu de refaire une demande au système d'exploitation, on check les éléments de la liste 1 à 1 pour voir si de la mémoire est inutilisée.
 
@@ -64,7 +70,7 @@ On a un chunk de taille 1 utilisé et un chunk de taille 4095 non-utilisé. Donc
 
 C'est efficace parce qu'on évite de faire un appel système mais en contre-partie on doit itérer dans toutes la liste. Ce n'est que de complexité O(n) mais si on à 1 million d'éléments ça devient un peu compliqué.
 
-Pour free, on prend juste le `chunk` que l'utilisateur demande de free et on le met en disponible. si par contre on a un chunk de 1, comme dans notre exemple, et que l'utilisateur demande un chunk de 3996, au lieu de re demander au système de donner une page de mémoire, on peut simplement fusionner les deux chunks. On le fait en amont avec free, qui merge les blocs non utilisé. C'est le soucis de fragmentation et de défragmentation.
+Pour free, on prend juste le `chunk` que l'utilisateur demande de free et on le met en disponible. Si par contre l'utilisateur demande de free le chunk de 1 et qu'il demande ensuite un chunk de 3996, au lieu de re demander au système de donner une page de mémoire, on peut simplement fusionner les deux chunks (1 et 3995). On le fait en amont avec free, qui merge les blocs non utilisé. C'est le soucis de fragmentation et de défragmentation.
 <br>
 Ça correspond bien à ce que le sujet demande:
  > With performance in mind, you must limit the number of calls to mmap(), but also
@@ -87,7 +93,7 @@ Dans ce [forum](https://stackoverflow.com/questions/35101016/performing-malloc-i
        │ realloc()                            │               │         │
        └──────────────────────────────────────┴───────────────┴─────────┘
 
-où `MT-Safe` :
+où `MT-Safe` est défini comme ceci :
 
 	MT-Safe
               MT-Safe or Thread-Safe functions are safe to call in the
@@ -119,7 +125,11 @@ On a droit à deux variables globales pour le programme. Je pense que l'une est 
 
 <br>
 
-Le sujet parle de zone aussi mais je ne comprends pas encore ce que c'est. Voici ce que le sujet dit:
+##### Zones mémoires
+
+<br>
+
+Le sujet parle de zone aussi mais je ne comprends pas encore ce que c'est. Voici ce qui est dit:
 
 	• Each zone must contain at least 100 allocations.
 		◦ “TINY” mallocs, from 1 to n bytes, will be stored in N bytes big zones.
@@ -129,24 +139,34 @@ Le sujet parle de zone aussi mais je ne comprends pas encore ce que c'est. Voici
 
 <br>
 
+##### Alignement
+
+<br>
+
 Le sujet met un gros `warning`:
 >You must properly align the memory returned by your malloc
 
-Je dois creuser l'allignement de la mémoire.
+Je dois creuser un peu plus pour comprendre ce que l'allignement de la mémoire est exactement.
 
 ---
 
-Pour linker un fichier qui test mon malloc, je dois faire ceci `-L. -l (chemin_de_la_lib)`. Dans mon Makefile, j'ai la règle run qui est écrite comme tel:
+<br>
+
+##### Link
+
+<br>
+
+Pour linker un fichier qui test mon `malloc`, je dois faire ceci `-L. -l (chemin_de_la_lib)` dans la racine du dossier `malloc`. Dans mon Makefile, j'ai la règle run qui est écrite comme tel:
 
 	@cc main.c -o test -L. -l${LNNAME}
 
-Donc je compile main.c en nommant l'exécutable en test, je donne le dossier actuel pour donner le chemin de la librairie avec `-L` et je donne le nom de ma lib avec `-l`.
+Donc je compile main.c en nommant l'exécutable `test`, je donne le dossier actuel pour donner le chemin de la librairie avec `-L` et je donne le nom de ma lib avec `-l`.
 <br>
 Si on essaie d'exécuter `test` directement, on ressort avec cet output:
 
 	./test: error while loading shared libraries: libft_malloc.so: cannot open shared object file: No such file or directory
 
-qui dit en gros qu'il ne trouve pas la `shared librarie` correspondante... Le linker `ld` utilise la variable d'environnement `LD_LIBRARY_PATH` pour connaître la position des fichiers de la lib. Donc il faut exécuter `test` comme ceci:
+qui dit en gros qu'il ne trouve pas la `shared library` correspondante... Le linker `ld` utilise la variable d'environnement `LD_LIBRARY_PATH` pour connaître la position des fichiers de la lib. Donc il faut exécuter `test` comme ceci:
 
 	LD_LIBRARY_PATH=. ./test
 
@@ -167,5 +187,220 @@ Si j'export cette variable d'environnement, les programmes qui utilisent `malloc
 	continue pour continuer jusqu'au prochain breakpoint
 	kill pour terminer le programme
 	print var_name pour voir la valeur d'une variable
-	SUPER IMPORTANT !!!!
-	set exec-wrapper env "LD_LIBRARY_PATH=/test/."
+	set exec-wrapper env LD_LIBRARY_PATH=/test/. sera utilisé pour donné un environnement modifié à mon programme
+
+
+---
+
+<br>
+
+##### Zones de mémoire
+
+<br>
+
+Par rapport aux zones mémoire, le sujet dit ceci (je l'ai dit plus haut):
+>The size of these zones must be a multiple of getpagesize() under macOS or sysconf(_SC_PAGESIZE) under Linux.
+
+Donc j'imagine que la zone `TINY` sera de la taille `sysconf(_SC_PAGESIZE)` ou peut être la moitié de ceci ? `SMALL` sera probablement le double ou la valeur normale...
+
+Il faut comprendre déjà une chose : les données envoyées par mmap sont continues. Donc on a un bloc mémoire entier pour nous grâce à la mémoire virtuelle. Mais ça c'est encore autre chose, ce qui nous intéresse nous, c'est ce bloc mémoire.
+Quand un utilisateur demande un bloc, on a notre struct t_chunk suivie de la zone envoyée à l'utilisateur. Donc `void *data` ne sert à rien. C'est redondant.
+
+	Notre structure modifié :
+	typedef struct s_chunk
+	{
+		int		used;
+		size_t	size;
+		struct	s_chunk *next;
+		struct	s_chunk *prev;
+	} t_chunk;
+
+Notre valeur de retour sera donc `(void *)(chunk + 1)`.
+Si notre première adresse mémoire est `0x1000`, alors notre premier t_chunk commencera à `0x1000` jusqu'à `0x1000 + sizeof(t_chunk)`. Notre zone mémoire sera `0x1000 + sizeof(t_chunk)` et terminera à `0x1000 + sizeof(t_chunk) + chunk->size`.
+
+	0x1000                0x1000 + sizeof(t_chunk)
+	|_______t_chunk_______|_______données_______|
+
+Et donc la formule pour connaître la taille d'une zone mémoire :
+
+	zone_memoire = 100 * (sizeof(t_chunk) + n);
+
+où :
+- zone_memoire = TINY, SMALL ou LARGE
+- 100 c'est simplement le sujet qui le demande
+	> Each zone must contain at least 100 allocations
+- sizeof(t_chunk) = la taille de notre structure. Forcément elle doit être pris en compte dans le calcul, sinon tout sera faussé.
+- `n` ou `n + 1` ou `m + 1` = la valeur à trouver
+
+`N` et `M`sont les zones mémoires. `TINY` est en faite juste `N`. `SMALL` est juste `M`.
+
+Le sujet dit ceci pour les zones `LARGE`'s :
+> “LARGE” mallocs, from (m + 1) bytes and above, will be allocated outside the standard memory zones. This means they will be handled using mmap(), placing them in their own separate memory zone.
+
+Donc chaque `malloc` de type `LARGE` fera un `mmap()` sans prendre en compte les autres zones. Pour le `free`, on utilisera `munmap()` directement dessus aussi.
+
+Pour le fonctionnement de `free`, on utilisera `munmap()` seulement quand une zone est totalement libre.
+
+<br>
+
+##### Alignement
+
+<br>
+
+Par rapport à l'alignement de mémoire, [cette page wikipedia](https://fr.wikipedia.org/wiki/Alignement_en_m%C3%A9moire) explique assez bien le principe d'alignement.
+
+Dans le wiki, il est dit que les processeurs fonctionnent mieux et plus rapidement quand les données sont alignées sur les addresses mémoires en multiple de 4 (ou de 2 ou 8). Par exemple :
+
+	struct no_align
+	{
+		char c; //1
+		double d; //8
+		int i; //4
+		char c2[3]; //3
+	};
+
+	struct align
+	{
+		double d; //8
+		int i; //4
+		char c2[3]; //3
+		char c; //1
+	};
+
+On a des structures avec exactement les mêmes membres. Mais quand on se met à compter la place que chaque membre prend dans la mémoire, en partant de 0 par exemple, on se rend compte que le processeur va avoir du mal à lire tout ça. Le compilateur intervient généralement ici et met, ce qu'on appelle, du padding.
+
+	struct no_align
+	{
+		char c; //1
+		double d; //8
+		int i; //4
+		char c2[3]; //3
+	};
+
+Donc les deux premiers éléments ici prennent 9 octets et les deux suivants prennent 7 octets. C'est trop aléatoire, certains processeur ARM peuvent crash là dessus, mais comme dit précédemment le compilateur intervient et met du padding. La structure ressemblera donc à ceci :
+
+	struct no_align
+	{
+		char c; //1
+		char __pad1[7]; //7
+		double d; //8
+		int i; //4
+		char c2[3]; //3
+		char __pad2; //4
+	};
+
+Et maintenant nos membres sont alignés mais la structure prend plus de place. Au lieu de prendre 16 octets (8 + 4 + 1 + (1 * 3)), celle-ci prendra 24 octets.
+
+C'est bien beau tout ça, mais ça n'a pas grand chose à voir avec malloc. C'est juste bon à savoir pour optimiser la place que nos structures prennent en mémoires.
+C'est pas si vrai... Grâce à tout ceci, on comprend que le processeur préfère avoir des données à traiter avec des multiples de 2, 4, 8, 16, etc... Donc les données qu'on renvoit avec malloc, doivent aussi être alignées !
+
+Pour ça, on a une macro :
+
+	#define ALIGN(size) (((size) + 15) & ~15)
+
+Cette macro défini l'alignement approprié pour chaque demande d'allocation.
+Elle donne la fourchette haute de ce que l'utilisateur demande. Voyons voir un peu ce que ça veut dire concrètement :
+
+Si l'utilisateur écrit `malloc(17);`,
+On doit lui renvoyer une allocation réelle de 32 bits au minimum.
+17 = `0001 0001` donc il a besoin d'au maximum `0010 0000` (32) et la macro nous renvoit ceci :
+
+	(((17) + 15) & ~15)
+	((32) & ~15)
+	0010 0000 & 1111 0000
+	0010 0000
+
+Si le + 15 n'était pas là, on renverrai 16 :
+
+	((17) & ~15)
+	0001 0001 & 1111 0000
+	0001 0000
+
+Et on perdrait de l'information + de la capacité de stockage. Donc on donne la fourchette haute.
+
+<br>
+
+##### Pré-allocation
+
+<br>
+
+La préallocation se fera par rapport à la taille de la zone je pense... Par exemple avec `malloc(17)` (j'imagine que c'est `TINY`), on ne peut pas simplement demander à `mmap()` de nous donner 17 octets. La fonction va forcément nous renvoyer une `page` complète. Cette page, on ne l'a jette pas mais on l'a garde pour les prochaines allocations de la même zone.
+
+<br>
+
+##### Re définition des variables globales
+
+<br>
+
+On a le droit a deux variables globale. Pour l'instant on va seulement se pencher sur la variable qui s'occupe de nos allocations.
+> You are allowed one global variable to manage your allocations and one for thread-safety.
+
+Notre variable globale pour les allocations, sera en faite une liste vers les structures des zones mémoires.
+
+	typedef struct s_chunk
+	{
+		int		used;
+		// le compilateur va probablement mettre int __pad1; pour que la structure fasse 32 bits
+		size_t	size;
+		struct	s_chunk *next;
+		struct	s_chunk *prev;
+	}	t_chunk;
+
+	typedef struct s_zone
+	{
+		size_t size;
+		t_chunk *chunk;
+		struct s_zone *next;
+	}	t_zone;
+
+	typedef struct s_alloc
+	{
+		t_zone *tiny;
+		t_zone *small;
+		t_zone *large;
+	}	t_alloc;
+
+	t_alloc g_alloc; //variable globale
+
+`g_alloc` contiendra toutes les zones de mémoires. <br>
+Ces zones sont des `t_zone`, avec comme membre :
+- `size_t size`, qui est la taille totale de la zone (je pense que ce sera souvent le multiple d'une `pagesize`), sera calculé avec la fameuse formule qu'on a trouvé juste avant : `zone_memoire = 100 * (sizeof(t_chunk) + n);`
+- `*chunk`, qui est la liste des chunks à l'intérieur de la zone
+- `*next`, qui est la prochaine zone du même type. C'est une liste chaînée, on pourrait la faire en double aussi mais je n'en vois pas encore l'utilité.
+
+D'ailleurs, connaît d'avance la taille de `t_chunk`, donc avec `n` = 0, on peut déduire que la taille d'une zone = 3200. `t_chunk` fait 32 octets, * 100, ça fait bien 3200. C'est plus petit que la moyenne des `pagesizes`, qui est de 4096 donc le `n` et le `m` sera bien utile. Dans tous les cas ce sera un multiple de `pagesize`.
+
+<br>
+
+##### Faisons un flow de A à Z
+
+<br>
+
+Essayons de refaire le flow de a à z.
+
+L'utilisateur utilise malloc, on a une size et on doit checker quel type de malloc c'est.
+La size, donnée en paramètre, doit être comparée aux tailles de zones ? À la formule `zone_memoire = 100 * (sizeof(t_chunk) + n);` ?
+Parce que du coup, taille de zone = taille max d'une certaine zone. Donc on check, si `size` est plus petit ou égal à `TINY` alors on fout ça dans la liste `TINY`, sinon on check la même chose avec `SMALL` ou `LARGE`.
+On demande à `mmap()` un page complète, on prend la valeur renvoyée par la macro `#define ALIGN(size) (((size) + 15) & ~15)` et on envoi à l'utilisateur le bon bloc mémoire avec la bonne taille minimum à l'utilisateur.
+
+Donc concrètement avec `malloc(17);`, on aura avec les structures définies plus haut :
+
+- entrée dans la fonction malloc
+- on prend la size donnée, donc ici 17
+- on check avec la formule de la taille de zone et on sait que ça va dans `TINY`
+- on check si `t_zone *tiny;` existe déjà, ici non donc on le crée
+- on crée une instance de t_zone
+- on appelle `mmap()` qui nous renvoit une seule page entière
+- on fout cette page à côté du chunk, normalement on peut renseigner à `mmap()` l'adresse mémoire à laquelle on veut placer la page donnée
+- on initialise tout
+- on travaille sur la size que l'utilisateur veut avoir
+
+Là le délire de fragmentation est encore flou... Je ne suis pas sûr de savoir comment déplacer les morceaux voulu à côté des structures t_chunk crées...
+
+En faite non c'est très simple. Déjà, la page donnée par `mmap()` va servir, non seulement, à garder en mémoire les blocs mémoire MAIS EN PLUS les t_zones ! Donc une zone `TINY`, par exemple, aura sa propre page ET ses propres chunks. Tout est séparé !
+Donc notre page ressemblera à ceci :
+
+	 t_zone zone - t_chunk_1 - bloc_1 - t_chunk_2 - bloc_2
+	|------------|-----------|--------|-----------|-------|
+
+Et quand cette zone n'est plus du tout utilisé, on utilise `munmap()`. Tout prend sens !
