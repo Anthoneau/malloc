@@ -400,7 +400,30 @@ Là le délire de fragmentation est encore flou... Je ne suis pas sûr de savoir
 En faite non c'est très simple. Déjà, la page donnée par `mmap()` va servir, non seulement, à garder en mémoire les blocs mémoire MAIS EN PLUS les t_zones ! Donc une zone `TINY`, par exemple, aura sa propre page ET ses propres chunks. Tout est séparé !
 Donc notre page ressemblera à ceci :
 
-	 t_zone zone - t_chunk_1 - bloc_1 - t_chunk_2 - bloc_2
-	|------------|-----------|--------|-----------|-------|
+	 t_zone_1 - t_chunk_1 - bloc_1 - t_chunk_2 - bloc_2 - t_chunk_3 - bloc_3
+	|---------|-----------|--------|-----------|--------|-----------|--------|
 
 Et quand cette zone n'est plus du tout utilisé, on utilise `munmap()`. Tout prend sens !
+Et donc pour la fragmentation, si par exemple le bloc_2 n'est plus utilisé (que l'utilisateur demande à le `free`), notre programme va venir checker les voisins du bloc 2 pour vérifier si il n'y a pas déjà des espaces inutilisés. Si dans notre exemple, le bloc 3 a été `free` juste avant, alors on a deux blocs qui se suivent qui peuvent être fusionnés. La taille du bloc 2 (`t_chunk->size`) sera donc plus grande de `t_chunk_3->size` + `sizeof(t_chunk)`. On ne vient pas nettoyer les données, parce que ça ne sert à rien. C'est pour ça que certains mallocs sont parfois sales.
+
+Par contre que se passe-t-il quand on a 10 blocs et que le bloc 2 et 7 sont free ? On ne défragmente pas ?
+
+# source
+
+- [man `mmap()`](https://man7.org/linux/man-pages/man2/mmap.2.html)
+- [man `munmap()`](https://man7.org/linux/man-pages/man3/munmap.3p.html)
+- [man `malloc`](https://man7.org/linux/man-pages/man3/free.3.html)
+- [exemple d'implementation de malloc 1](https://gitlab.com/paulguillier/malloc)
+- [exemple d'implementation de malloc 2](https://github.com/jterrazz/42-malloc)
+- [exemple d'implementation de malloc 3](https://github.com/st3w4r/42-malloc)
+- [discussion de l'alignement sur stackoverflow](https://stackoverflow.com/questions/8752546/how-does-malloc-understand-alignment)
+- [memory paging wikipedia](https://en.wikipedia.org/wiki/Memory_paging)
+- [memory paging en video](https://www.youtube.com/watch?v=fGP6VHxqkIM)
+- [ça m'a un peu aidé mais ça part dans tous les sens](https://gee.cs.oswego.edu/dl/html/malloc.html)
+- [nedmalloc, sert à rien](https://www.nedprod.com/programs/portable/nedmalloc/index.html)
+- [opérateur en C (pour `~`)](https://learn.microsoft.com/fr-fr/cpp/c-language/c-operators?view=msvc-170)
+- [rappel des bitwise-operators](https://www.w3schools.com/c/c_bitwise_operators.php)
+- [online compiler](https://www.programiz.com/c-programming/online-compiler/)
+- [alignement en mémoire](https://fr.wikipedia.org/wiki/Alignement_en_m%C3%A9moire)
+- [playlist youtube de memory management](https://www.youtube.com/watch?v=ObakIXh3mNw&list=PLlqoNzE2bqWulFVmkdoVI9S7Jr0uvPVEP)
+- [What if I try to malloc WAY too much memory?](https://www.youtube.com/watch?v=Fq9chEBQMFE)

@@ -4,12 +4,21 @@
 # include <stdlib.h>
 # include <sys/mman.h>
 # include <unistd.h>
+# include "libft.h"
 
 # if defined(__linux__)
 	#define pagesize sysconf(_SC_PAGESIZE)
 # elif defined(__APPLE__)
 	#define pagesize getpagesize()
 # endif
+
+# define ALIGN(size) (((size) + 15) & ~15)
+
+# define TINY_SIZE (sizeof(t_chunk) + 128)
+# define TINY_MAX (100 * (sizeof(t_chunk) + 128))
+
+# define SMALL_SIZE (sizeof(t_chunk) + 1024)
+# define SMALL_MAX (100 * (sizeof(t_chunk) + 1024))
 
 typedef enum e_size
 {
@@ -29,6 +38,7 @@ typedef struct s_chunk
 typedef struct s_zone
 {
 	size_t size;
+	size_t size_available;
 	t_chunk *chunk;
 	struct s_zone *next;
 }	t_zone;
