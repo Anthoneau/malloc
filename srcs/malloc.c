@@ -33,7 +33,7 @@ void *malloc(size_t size) {
 			//ft_printf("adress of (*tiny) : %p\n", (*tiny));
 			(*tiny)->size = pagesize;
 			(*tiny)->next = NULL;
-			(*tiny)->chunk = (t_chunk *)&(*tiny) + sizeof(t_zone) + 1;
+			(*tiny)->chunk = (t_chunk *)((*tiny) + 1);
 			//ft_printf("adress of (*tiny)->chunk : %p\n", (*tiny)->chunk);
 			write(1, "success for t_zone\n", 20);
 			(*tiny)->chunk->used = 0;
@@ -41,7 +41,7 @@ void *malloc(size_t size) {
 			(*tiny)->chunk->next = NULL;
 			(*tiny)->chunk->prev = NULL;
 			(*tiny)->size_available = (*tiny)->size - (*tiny)->chunk->size;
-			return (void *)(&(*tiny)->chunk + sizeof(t_chunk));
+			return (void *)((*tiny)->chunk + 1);
 		}
 		else if ((*tiny)->size_available >= ALIGN(size)) {
 			write(1, "tiny exist\n", 12);
@@ -55,7 +55,7 @@ void *malloc(size_t size) {
 			current->size = ALIGN(size);
 			current->next = NULL;
 			(*tiny)->size_available -= current->size;
-			return (void *)(current + sizeof(t_chunk));
+			return (void *)(current + 1);
 		}
 		else {
 			if (i == 2)
@@ -79,7 +79,7 @@ void *malloc(size_t size) {
 			(*tiny)->chunk->prev = NULL;
 			(*tiny)->size_available = (*tiny)->size - (*tiny)->chunk->size;
 			i++;
-			return (void *)(&(*tiny)->chunk + sizeof(t_chunk));
+			return (void *)((*tiny)->chunk + 1);
 		}
 	}
 	return NULL;

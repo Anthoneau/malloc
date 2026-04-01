@@ -408,6 +408,22 @@ Et donc pour la fragmentation, si par exemple le bloc_2 n'est plus utilisé (que
 
 Par contre que se passe-t-il quand on a 10 blocs et que le bloc 2 et 7 sont free ? On ne défragmente pas ?
 
+<br>
+
+##### Juste une précision
+
+<br>
+
+Je n'étais pas au courant que `pointeur_typé + 1` donnait en gros `sizeof(pointeur_typé) + 1`.
+Donc ici :
+
+	t_chunk *current = zone->chunk;
+	return (void *)(current + 1);
+
+Donne bien la `FIN` du pointeur. C'est différent de `ptr++`.
+
+---
+
 # source
 
 - [man `mmap()`](https://man7.org/linux/man-pages/man2/mmap.2.html)

@@ -14,11 +14,11 @@
 
 # define ALIGN(size) (((size) + 15) & ~15)
 
-# define TINY_SIZE (sizeof(t_chunk) + 128)
-# define TINY_MAX (100 * (sizeof(t_chunk) + 128))
+# define TINY_SIZE 128
+# define TINY_MAX (100 * (sizeof(t_chunk) + TINY_SIZE))
 
-# define SMALL_SIZE (sizeof(t_chunk) + 1024)
-# define SMALL_MAX (100 * (sizeof(t_chunk) + 1024))
+# define SMALL_SIZE 1024
+# define SMALL_MAX (100 * (sizeof(t_chunk) + SMALL_SIZE))
 
 typedef enum e_size
 {
