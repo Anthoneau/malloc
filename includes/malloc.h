@@ -42,8 +42,7 @@ typedef struct s_zone
 {
 	size_t			size;
 	size_t			size_available;
-	size_t			n_of_blocs;
-	size_t			size_of_biggest;
+	size_t			n_of_chunks;
 	t_chunk			*chunk;
 	struct s_zone	*next;
 }	t_zone;
