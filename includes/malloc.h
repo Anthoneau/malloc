@@ -20,34 +20,39 @@
 # define SMALL_SIZE 1024
 # define SMALL_MAX (100 * (sizeof(t_chunk) + SMALL_SIZE))
 
-typedef enum e_size
+# define MULTIPLE(size) (((size) + (pagesize - 1)) & ~(pagesize - 1))
+
+typedef enum e_type
 {
 	TINY,
 	SMALL,
 	LARGE
-}	t_size;
+}	t_type;
 
 typedef struct s_chunk
 {
-	int		used;
-	size_t	size;
-	struct	s_chunk *next;
-	struct	s_chunk *prev;
+	int				used;
+	size_t			size;
+	size_t			real_size;
+	struct	s_chunk	*next;
+	struct	s_chunk	*prev;
 }	t_chunk;
 
 typedef struct s_zone
 {
-	size_t size;
-	size_t size_available;
-	t_chunk *chunk;
-	struct s_zone *next;
+	size_t			size;
+	size_t			size_available;
+	size_t			n_of_blocs;
+	size_t			size_of_biggest;
+	t_chunk			*chunk;
+	struct s_zone	*next;
 }	t_zone;
 
 typedef struct s_alloc
 {
-	t_zone *tiny;
-	t_zone *small;
-	t_zone *large;
+	t_zone	*tiny;
+	t_zone	*small;
+	t_zone	*large;
 }	t_alloc;
 
 void free(void *ptr);

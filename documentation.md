@@ -410,7 +410,7 @@ Par contre que se passe-t-il quand on a 10 blocs et que le bloc 2 et 7 sont free
 
 <br>
 
-##### Juste une précision
+##### Juste quelques précisions
 
 <br>
 
@@ -421,6 +421,32 @@ Donc ici :
 	return (void *)(current + 1);
 
 Donne bien la `FIN` du pointeur. C'est différent de `ptr++`.
+
+J'ai ajouté cette macro
+
+	# define MULTIPLE(size) (((size) + (pagesize - 1)) & ~(pagesize - 1))
+
+Qui reprend la logique de ALIGN(size) mais cette fois pour la pagesize. Le sujet nous demande explicitement de prendre un multiple de pagesize, c'est ce que fait cette formule.
+
+<br>
+Il faut changer 
+
+	current->next = (t_chunk *)&current + sizeof(t_chunk) + current->size + 1;
+
+en
+
+	current->next = (t_chunk *)((char *)(current + 1) + current->size);
+
+Pourquoi ?
+<br>
+
+Déjà, current est de type `t_chunk *`. Donc la ligne demande en gros d'allouer le prochain chunk. Pour ça, il faut passer le `t_chunk *` déjà présent ET l'espace mémoire alloué pour l'utilisateur. Avant je donnais l'adresse du pointeur (et non de la structure) + la taille d'un `t_chunk` + la taille  + 1, le tout caster en `t_chunk *`. Ce qui ne va pas parce que, par exemple, `current->size` va passer `current->size` * `t_chunk`... C'est un comportement indéfini.
+La deuxième ligne est la bonne, le résultat total sera caster en `t_chunk *`. `current + 1` avance de exactement `sizeof(t_chunk)`, et `current->size` avancera exactement de 1 octet. Comment je sais qu'il avancera de 1 octet ? Parce qu'un `char` fait exactement 1 octet, et donc demander à un `char *` d'avancer, va en faite lui demander d'avancer de 1 octet à chaque fois. C'est comme faire `sizeof(char) + 1` * `current->size`. <br>
+J'avais un peu de mal avec ce concept, mais si par exemple l'utilisateur demande un malloc d'entier :
+
+	int *ptr = malloc(2 * sizeof(int));
+
+La taille reçu sera `2 * 4 octets` donc 8 octets. La `size` sera égale à 8, et on veut avancer de 8 octets d'un coup, donc en `1 * current->size`.
 
 ---
 

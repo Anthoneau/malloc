@@ -9,43 +9,43 @@
 
 int main(void) {
 
-	//size_t size = 17;
-	//ft_printf("pagesize : %d\n", pagesize);
-	//char *ptr = (char *)malloc(size);
-	//if (ptr) write(1, "pointer ok\n", 12);
-	//else return 1;
-	//memset(ptr, 'a', size);
-	////sleep(1);
-	//int i = 0;
-	//while (i < size) {
-	//	if (ptr[i])
-	//		ft_printf("%c", ptr[i]);
-	//	i++;
-	//}
-	//write(1, "\n", 1);
-
-	//size = 10;
-	//char *ptr2 = (char *)malloc(size);
-	//if (ptr) write(1, "pointer ok\n", 12);
-	//else return 1;
-	//memset(ptr, 'a', size);
-	////sleep(1);
-	//i = 0;
-	//while (i < size) {
-	//	if (ptr[i])
-	//		ft_printf("%c", ptr[i]);
-	//	i++;
-	//}
-	//write(1, "\n", 1);
-
+	size_t size = 17;
+	ft_printf("pagesize : %d\n", pagesize);
+	char *ptr = (char *)malloc(size);
+	if (ptr) write(1, "pointer ok\n", 12);
+	else return 1;
+	memset(ptr, 'a', size);
+	//sleep(1);
 	int i = 0;
-	while (1) {
-		void *ptr = malloc(100);
-		if (!ptr)
-			break ;
-		ft_printf("%d\t", i);
+	while (i < size) {
+		if (ptr[i])
+			ft_printf("%c", ptr[i]);
 		i++;
 	}
+	write(1, "\n", 1);
+
+	size = 10;
+	char *ptr2 = (char *)malloc(size);
+	if (ptr) write(1, "pointer ok\n", 12);
+	else return 1;
+	memset(ptr, 'a', size);
+	//sleep(1);
+	i = 0;
+	while (i < size) {
+		if (ptr[i])
+			ft_printf("%c", ptr[i]);
+		i++;
+	}
+	write(1, "\n", 1);
+
+	//int i = 0;
+	//while (1) {
+	//	void *ptr = malloc(100);
+	//	if (!ptr)
+	//		break ;
+	//	ft_printf("%d\t", i);
+	//	i++;
+	//}
 
 	//int psize = sysconf(_SC_PAGE_SIZE);
 	//int pflag = PROT_READ | PROT_WRITE;
