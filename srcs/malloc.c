@@ -110,11 +110,33 @@ void *malloc(size_t size) {
 	return NULL;
 }
 
+void defragmentation(t_chunk *chunk) {
+	t_chunk *next = chunk->next;
+	chunk->size += sizeof(t_chunk) + next->size;
+	if (next->next)
+		next->next->prev = chunk;
+	chunk->next = next->next;
+}
+
 void free(void *ptr) {
+	/*
+		TODO
+		Il manque munmap(), je dois encore checker si une zone est completement vide ou non
+		Les tailles de t_chunk et de t_zone sont égales à 40 donc je pense que je peux "simplement"
+		bondir de 40 octets en 40 octets jusqu'à trouver t_zone.
+		De là, je peux accéder à la size_available pour pouvoir la décrémenter ET checker si je dois munmap().
+	*/
 	if (!ptr)
 		return ;
-	(void)ptr;
-	write(1, "free\n", 6);
+	t_chunk *chunk;
+	chunk = ptr - sizeof(t_chunk);
+	if (!chunk)
+		return ;
+	chunk->used = 0;
+	if (chunk->next && chunk->next->used == 0)
+		defragmentation(chunk);
+	if (chunk->prev && chunk->prev->used == 0)
+		defragmentation(chunk->prev);
 }
 
 void *realloc(void *ptr, size_t size) {
@@ -127,7 +149,6 @@ void *realloc(void *ptr, size_t size) {
 }
 
 void show_alloc_mem(void *ptr) {
-	//printf("adress: %p\n", ptr);
 	(void)ptr;
 	write(1, "show alloc\n", 12);
 }

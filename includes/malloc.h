@@ -34,8 +34,8 @@ typedef struct s_chunk
 	int				used;
 	size_t			size;
 	size_t			real_size;
-	struct	s_chunk	*next;
-	struct	s_chunk	*prev;
+	struct s_chunk	*next;
+	struct s_chunk	*prev;
 }	t_chunk;
 
 typedef struct s_zone
