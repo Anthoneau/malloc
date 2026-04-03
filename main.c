@@ -27,6 +27,10 @@ int main(void) {
 	char *str = (char *)malloc(size);
 	ft_strlcpy(str, test, size);
 	ft_putendl_fd(str, 1);
+	
+	show_alloc_mem();
+	
+	free(str);
 
 	//char *test2 = "test string 2";
 	//size = ft_strlen(test2) + 1;

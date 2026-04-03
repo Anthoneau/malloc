@@ -55,12 +55,14 @@ t_chunk *alloc_chunk(size_t size, t_chunk *current) {
 	current->used = 1;
 	current->size = r_size;
 	current->real_size = size;
-	t_chunk *free_chunk = (t_chunk *)((char *)(current + 1) + current->size);
-	free_chunk->used = 0;
-	free_chunk->size = free_size - (sizeof(t_chunk) + r_size);
-	free_chunk->next = NULL;
-	current->next = free_chunk;
-	free_chunk->prev = current;
+	if (free_size != r_size && (free_size - (sizeof(t_chunk) + r_size)) >= sizeof(t_chunk)) {
+		t_chunk *free_chunk = (t_chunk *)((char *)(current + 1) + current->size);
+		free_chunk->used = 0;
+		free_chunk->size = free_size - (sizeof(t_chunk) + r_size);
+		free_chunk->next = NULL;
+		current->next = free_chunk;
+		free_chunk->prev = current;
+	}
 
 	return (current);
 }
@@ -82,20 +84,21 @@ int check_availability(size_t size, t_zone *zone) {
 	return 0;
 }
 
-void *do_alloc(size_t size, t_zone **zone, t_type type) {
-	t_chunk *chunk = NULL;
-	while ((*zone)) { // boucle pour atteindre la prochaine zone valide
-		if (type != LARGE && check_availability(size, *zone))
+void *do_alloc(size_t size, t_zone **g_zone, t_type type) {
+	t_zone *zone = *g_zone;
+	while (zone) { // boucle pour atteindre la prochaine zone valide
+		if (type != LARGE && check_availability(size, zone))
 			break ;
-		(*zone) = (*zone)->next;
+		zone = zone->next;
 	}
 
-	if ((*zone) == NULL) // on crée une zone
-		chunk = alloc_zone(size, zone, type);
+	t_chunk *chunk = NULL;
+	if (zone == NULL) // on crée une zone
+		chunk = alloc_zone(size, &zone, type);
 	else { // la zone contient de la place
-		chunk = alloc_chunk(size, (*zone)->chunk);
-		(*zone)->size_available -= (sizeof(t_chunk) + chunk->size);
-		(*zone)->n_of_chunks++;
+		chunk = alloc_chunk(size, zone->chunk);
+		zone->size_available -= (sizeof(t_chunk) + chunk->size);
+		zone->n_of_chunks++;
 	}
 	return ((chunk == NULL) ? NULL : ((void *)(chunk + 1)));
 }
@@ -110,33 +113,39 @@ void *malloc(size_t size) {
 	return NULL;
 }
 
-void defragmentation(t_chunk *chunk) {
+void defragmentation(t_chunk *chunk, t_zone *zone) {
 	t_chunk *next = chunk->next;
 	chunk->size += sizeof(t_chunk) + next->size;
 	if (next->next)
 		next->next->prev = chunk;
 	chunk->next = next->next;
+	zone->n_of_chunks--;
+}
+
+t_zone *find_zone(t_chunk *chunk) {
+	t_chunk *temp = chunk;
+	while (temp && temp->prev)
+		temp = temp->prev;
+	return (t_zone *)((temp - 1));
 }
 
 void free(void *ptr) {
-	/*
-		TODO
-		Il manque munmap(), je dois encore checker si une zone est completement vide ou non
-		Les tailles de t_chunk et de t_zone sont égales à 40 donc je pense que je peux "simplement"
-		bondir de 40 octets en 40 octets jusqu'à trouver t_zone.
-		De là, je peux accéder à la size_available pour pouvoir la décrémenter ET checker si je dois munmap().
-	*/
 	if (!ptr)
 		return ;
-	t_chunk *chunk;
-	chunk = ptr - sizeof(t_chunk);
+	t_chunk *chunk = ptr - sizeof(t_chunk);
 	if (!chunk)
 		return ;
+
 	chunk->used = 0;
-	if (chunk->next && chunk->next->used == 0)
-		defragmentation(chunk);
-	if (chunk->prev && chunk->prev->used == 0)
-		defragmentation(chunk->prev);
+	t_zone *zone = find_zone(chunk);
+	
+	while (chunk->next && chunk->next->used == 0)
+		defragmentation(chunk, zone);
+	while (chunk->prev && chunk->prev->used == 0)
+		defragmentation(chunk->prev, zone);
+	
+	if (zone->n_of_chunks == 1 && zone->chunk->used == 0)
+		munmap(zone, zone->size);
 }
 
 void *realloc(void *ptr, size_t size) {
@@ -148,7 +157,43 @@ void *realloc(void *ptr, size_t size) {
 	return NULL;
 }
 
-void show_alloc_mem(void *ptr) {
-	(void)ptr;
+void print_zone(char *zone, unsigned long adr) {
+	ft_putstr_fd(zone, 1);
+	ft_putstr_fd(" : ", 1);
+	ft_putaddress_fd(adr);
+}
+
+void show_alloc_mem(void) {
+	ft_printf("show alloc mem\n");
+	//ft_putendl_fd("adresse de tiny", 1);
+	//unsigned long adr = (unsigned long)&g_alloc.tiny;
+	//ft_putaddress_fd(adr);
+	unsigned long adr = (unsigned long)&g_alloc.tiny;
+	print_zone("TINY", adr);
+	ft_putchar_fd('\n', 1);
+	adr = (unsigned long)&g_alloc.small;
+	print_zone("SMALL", adr);
+	ft_putchar_fd('\n', 1);
+	adr = (unsigned long)&g_alloc.large;
+	print_zone("LARGE", adr);
+	ft_putchar_fd('\n', 1);
 	write(1, "show alloc\n", 12);
 }
+
+/*
+int type_arr[3] = {
+	TINY_MAX,
+	SMALL_MAX,
+	size
+};
+
+
+TINY : 0xA0000
+0xA0020 - 0xA004A : 42 bytes
+0xA006A - 0xA00BE : 84 bytes
+SMALL : 0xAD000
+0xAD020 - 0xADEAD : 3725 bytes
+LARGE : 0xB0000
+0xB0020 - 0xBBEEF : 48847 bytes
+Total : 52698 bytes
+*/

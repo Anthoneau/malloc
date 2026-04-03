@@ -13,9 +13,9 @@ SYMB		=	libft_malloc.so
 LNNAME		=	ft_malloc
 LIBFT		=	libft/libft.a
 CC			=	cc
-CFLAGS		=	-Wall -Wextra -Werror -fPIC
+CFLAGS		=	-Wall -Wextra -Werror -fPIC -MMD -MP
 LDFLAGS		=	-shared
-SYMLINK		=	ln -s
+SYMLINK		=	ln -sf
 SRCS		=	malloc.c
 RM			=	rm -rf
 SRCS_DIR	=	srcs/
@@ -41,6 +41,9 @@ COLOR_END	=	\033[0m
 
 MAKEFLAGS	+=	--no-print-directory
 OBJSF		=	.cache_exists
+DEPS		=	${OBJS:.o=.d}
+
+-include ${DEPS}
 
 all:		${SYMB}
 
@@ -48,8 +51,8 @@ ${SYMB}:	${NAME}
 			@${SYMLINK} ${NAME} ${SYMB}
 			@echo "${BGREEN}Malloc compiled!${COLOR_END}"
 
-${NAME}:	${LIBFT} | ${OBJS}
-			@${CC} ${LDFLAGS} ${OBJS} -o ${NAME}
+${NAME}:	${LIBFT} ${OBJS}
+			@${CC} ${LDFLAGS} ${LIBFT} ${OBJS} -o ${NAME}
 
 ${OBJS_DIR}%.o :	${SRCS_DIR}%.c | ${OBJSF}
 			@mkdir -p $(dir $@)
