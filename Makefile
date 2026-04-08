@@ -52,7 +52,7 @@ ${SYMB}:	${NAME}
 			@echo "${BGREEN}Malloc compiled!${COLOR_END}"
 
 ${NAME}:	${LIBFT} ${OBJS}
-			@${CC} ${LDFLAGS} ${LIBFT} ${OBJS} -o ${NAME}
+			@${CC} ${LDFLAGS} ${OBJS} ${LIBFT} -o ${NAME}
 
 ${OBJS_DIR}%.o :	${SRCS_DIR}%.c | ${OBJSF}
 			@mkdir -p $(dir $@)

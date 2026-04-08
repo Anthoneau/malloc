@@ -2,3 +2,5 @@
 *.dSYM
 *.so
 *.a
+objs/
+test

@@ -20,17 +20,27 @@ void test_large() {}
 void simpletest() {}
 
 int main(void) {
-	ft_printf("pagesize : %d\n", pagesize);
+	//ft_printf("pagesize : %d\n", pagesize);
 
 	char *test = "test string";
 	size_t size = ft_strlen(test) + 1;
+	//size_t size = 15;
 	char *str = (char *)malloc(size);
 	ft_strlcpy(str, test, size);
-	ft_putendl_fd(str, 1);
+
+	char *str2 = (char *)malloc(120);
+	//ft_putendl_fd(str, 1);
 	
 	show_alloc_mem();
-	
+
 	free(str);
+
+	show_alloc_mem();
+	
+	free(str2);
+
+	show_alloc_mem();
+	//free(str);
 
 	//char *test2 = "test string 2";
 	//size = ft_strlen(test2) + 1;

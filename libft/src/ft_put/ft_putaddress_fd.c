@@ -12,37 +12,27 @@
 
 #include "libft.h"
 
-static int	count_hexa(unsigned long ptr_val)
+static void	ft_putnbr_hexa_fd(unsigned long n, int fd)
 {
-	int	count;
-
-	if (ptr_val == 0)
-		return (1);
-	count = 0;
-	while (ptr_val > 0)
+	if (n >= 16)
 	{
-		ptr_val /= 16;
-		count++;
+		ft_putnbr_hexa_fd(n / 16, fd);
+		n %= 16;
+		if (n > 9)
+			ft_putchar_fd((n - 10) + 'a', fd);
+		else
+			ft_putchar_fd((n + '0'), fd);
 	}
-	return (count);
+	else {
+		if (n > 9)
+			ft_putchar_fd((n - 10) + 'a', fd);
+		else
+			ft_putchar_fd((n + '0'), fd);
+	}
 }
 
 void	ft_putaddress_fd(unsigned int long ptr_val)
 {
-	unsigned long	temp;
-	int				i;
-	
-	i = count_hexa(ptr_val);
-	i--;
 	ft_putstr_fd("0x", 1);
-	while (i >= 0)
-	{
-		temp = ptr_val % 16;
-		if (temp > 9)
-			ft_putchar_fd('a' + (temp - 10), 1);
-		else
-			ft_putchar_fd('0' + temp, 1);
-		ptr_val /= 16;
-		i--;
-	}
+	ft_putnbr_hexa_fd(ptr_val, 1);
 }

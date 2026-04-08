@@ -6,6 +6,8 @@
 # include <unistd.h>
 # include "libft.h"
 
+# include <stdio.h> // TODO supp
+
 # if defined(__linux__)
 	#define pagesize sysconf(_SC_PAGESIZE)
 # elif defined(__APPLE__)

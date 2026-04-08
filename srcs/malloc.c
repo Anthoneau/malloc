@@ -149,8 +149,10 @@ void free(void *ptr) {
 	
 	while (chunk->next && chunk->next->used == 0)
 		defragmentation(chunk, zone);
-	while (chunk->prev && chunk->prev->used == 0)
+	while (chunk->prev && chunk->prev->used == 0) {
 		defragmentation(chunk->prev, zone);
+		chunk = chunk->prev;
+	}
 	
 	if (zone->n_of_chunks == 1 && zone->chunk->used == 0)
 		munmap(zone, zone->size);
@@ -169,23 +171,42 @@ void print_zone(char *zone, unsigned long adr) {
 	ft_putstr_fd(zone, 1);
 	ft_putstr_fd(" : ", 1);
 	ft_putaddress_fd(adr);
+	ft_putchar_fd('\n', 1);
+}
+
+void print_chunk(t_chunk *chunk) {
+	unsigned long begin = (unsigned long)chunk;
+	unsigned long end = (unsigned long)(chunk + 1) + chunk->real_size;
+
+	ft_putaddress_fd(begin);
+	ft_putstr_fd(" - ", 1);
+	ft_putaddress_fd(end);
+	ft_putstr_fd(" : ", 1);
+	ft_putnbr_fd(chunk->real_size, 1);
+	ft_putendl_fd(" bytes", 1);
 }
 
 void show_alloc_mem(void) {
-	ft_printf("show alloc mem\n");
-	//ft_putendl_fd("adresse de tiny", 1);
-	//unsigned long adr = (unsigned long)&g_alloc.tiny;
-	//ft_putaddress_fd(adr);
-	unsigned long adr = (unsigned long)&g_alloc.tiny;
-	print_zone("TINY", adr);
-	ft_putchar_fd('\n', 1);
-	adr = (unsigned long)&g_alloc.small;
-	print_zone("SMALL", adr);
-	ft_putchar_fd('\n', 1);
-	adr = (unsigned long)&g_alloc.large;
-	print_zone("LARGE", adr);
-	ft_putchar_fd('\n', 1);
-	write(1, "show alloc\n", 12);
+	char type_arr[3][6] = {
+		"TINY",
+		"SMALL",
+		"LARGE"
+	};
+	t_zone *zone[3] = {
+		g_alloc.tiny,
+		g_alloc.small,
+		g_alloc.large
+	};
+	for (int i = 0; i < 3; i++) {
+		print_zone(type_arr[i], (unsigned long)zone[i]);
+		while (zone[i]) {
+			while (zone[i]->chunk) {
+				print_chunk(zone[i]->chunk);
+				zone[i]->chunk = zone[i]->chunk->next;
+			}
+			zone[i] = zone[i]->next;
+		}
+	}
 }
 
 /*
