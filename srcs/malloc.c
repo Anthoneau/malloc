@@ -63,6 +63,8 @@ t_chunk *alloc_chunk(size_t size, t_chunk *current) {
 		current->next = free_chunk;
 		free_chunk->prev = current;
 	}
+	else
+		current->size = free_size;
 
 	return (current);
 }
@@ -86,15 +88,21 @@ int check_availability(size_t size, t_zone *zone) {
 
 void *do_alloc(size_t size, t_zone **g_zone, t_type type) {
 	t_zone *zone = *g_zone;
+	t_zone *prev = NULL;
 	while (zone) { // boucle pour atteindre la prochaine zone valide
 		if (type != LARGE && check_availability(size, zone))
 			break ;
+		prev = zone;
 		zone = zone->next;
 	}
 
 	t_chunk *chunk = NULL;
-	if (zone == NULL) // on crée une zone
-		chunk = alloc_zone(size, &zone, type);
+	if (zone == NULL) { // on crée une zone
+		if (prev == NULL)
+			chunk = alloc_zone(size, g_zone, type);
+		else
+			chunk = alloc_zone(size, &prev->next, type);
+	}
 	else { // la zone contient de la place
 		chunk = alloc_chunk(size, zone->chunk);
 		zone->size_available -= (sizeof(t_chunk) + chunk->size);
@@ -132,7 +140,7 @@ t_zone *find_zone(t_chunk *chunk) {
 void free(void *ptr) {
 	if (!ptr)
 		return ;
-	t_chunk *chunk = ptr - sizeof(t_chunk);
+	t_chunk *chunk = (t_chunk *)ptr - 1;
 	if (!chunk)
 		return ;
 
