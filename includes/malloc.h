@@ -43,10 +43,11 @@ typedef struct s_chunk
 typedef struct s_zone
 {
 	size_t			size;
-	size_t			size_available;
+	//size_t			size_available;
 	size_t			n_of_chunks;
 	t_chunk			*chunk;
 	struct s_zone	*next;
+	struct s_zone	*prev;
 }	t_zone;
 
 typedef struct s_alloc

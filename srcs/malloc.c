@@ -2,6 +2,8 @@
 
 static t_alloc g_alloc;
 
+// MALLOC
+
 t_chunk *alloc_zone(size_t size, t_zone **zone, t_type type) {
 	int prot_flag = PROT_READ | PROT_WRITE;
 	int map_flag = MAP_PRIVATE | MAP_ANONYMOUS;
@@ -34,7 +36,7 @@ t_chunk *alloc_zone(size_t size, t_zone **zone, t_type type) {
 	chunk->real_size = chunk->size;
 	chunk->next = NULL;
 
-	(*zone)->size_available = (*zone)->size - (sizeof(t_chunk) + (*zone)->chunk->size);
+	//(*zone)->size_available = (*zone)->size - (sizeof(t_chunk) + (*zone)->chunk->size);
 	(*zone)->n_of_chunks = 2;
 
 	return ((*zone)->chunk);
@@ -73,8 +75,8 @@ int check_availability(size_t size, t_zone *zone) {
 	size_t r_size = ALIGN(size);
 	t_chunk *current = zone->chunk;
 
-	if (zone->size_available < r_size)
-		return 0;
+	//if (zone->size_available < r_size)
+	//	return 0;
 	while (current) {
 		if (current->used == 0 && current->size >= r_size)
 			return 1;
@@ -98,14 +100,18 @@ void *do_alloc(size_t size, t_zone **g_zone, t_type type) {
 
 	t_chunk *chunk = NULL;
 	if (zone == NULL) { // on crée une zone
-		if (prev == NULL)
+		if (prev == NULL) {
 			chunk = alloc_zone(size, g_zone, type);
-		else
+			(*g_zone)->prev = NULL;
+		}
+		else {
 			chunk = alloc_zone(size, &prev->next, type);
+			prev->next->prev = prev;
+		}
 	}
 	else { // la zone contient de la place
 		chunk = alloc_chunk(size, zone->chunk);
-		zone->size_available -= (sizeof(t_chunk) + chunk->size);
+		//zone->size_available -= (sizeof(t_chunk) + chunk->size);
 		zone->n_of_chunks++;
 	}
 	return ((chunk == NULL) ? NULL : ((void *)(chunk + 1)));
@@ -120,6 +126,8 @@ void *malloc(size_t size) {
 		return do_alloc(size, &g_alloc.large, LARGE);
 	return NULL;
 }
+
+// FREE
 
 void defragmentation(t_chunk *chunk, t_zone *zone) {
 	t_chunk *next = chunk->next;
@@ -137,6 +145,33 @@ t_zone *find_zone(t_chunk *chunk) {
 	return (t_zone *)((temp - 1));
 }
 
+void unset_zone(t_zone *zone) {
+	t_zone *prev = zone->prev;
+	t_zone *next = zone->next;
+
+	if (!prev) {
+		if (zone == g_alloc.tiny)
+			g_alloc.tiny = NULL;
+		else if (zone == g_alloc.small)
+			g_alloc.small = NULL;
+		else if (zone == g_alloc.large)
+			g_alloc.large = NULL;
+		//t_zone *first[3] = {
+		//	g_alloc.tiny,
+		//	g_alloc.small,
+		//	g_alloc.large
+		//};
+		//for (int i = 0; i < 3; i++) {
+		//	if (first[i] == zone)
+		//		first[i] = NULL;
+		//}
+	}
+	else
+		prev->next = next;
+	if (next)
+		next->prev = prev;
+}
+
 void free(void *ptr) {
 	if (!ptr)
 		return ;
@@ -145,6 +180,7 @@ void free(void *ptr) {
 		return ;
 
 	chunk->used = 0;
+	chunk->real_size = 0;
 	t_zone *zone = find_zone(chunk);
 	
 	while (chunk->next && chunk->next->used == 0)
@@ -154,9 +190,13 @@ void free(void *ptr) {
 		chunk = chunk->prev;
 	}
 	
-	if (zone->n_of_chunks == 1 && zone->chunk->used == 0)
+	if (zone->n_of_chunks == 1 && zone->chunk->used == 0) {
+		unset_zone(zone);
 		munmap(zone, zone->size);
+	}
 }
+
+// REALLOC
 
 void *realloc(void *ptr, size_t size) {
 	//printf("adress: %p\n", ptr);
@@ -166,6 +206,8 @@ void *realloc(void *ptr, size_t size) {
 	write(1, "realloc\n", 9);
 	return NULL;
 }
+
+// SHOW_ALLOC_MEM
 
 void print_zone(char *zone, unsigned long adr) {
 	ft_putstr_fd(zone, 1);
@@ -200,29 +242,14 @@ void show_alloc_mem(void) {
 	for (int i = 0; i < 3; i++) {
 		print_zone(type_arr[i], (unsigned long)zone[i]);
 		while (zone[i]) {
-			while (zone[i]->chunk) {
-				print_chunk(zone[i]->chunk);
-				zone[i]->chunk = zone[i]->chunk->next;
+			if (zone[i]->chunk) {
+				t_chunk *chunk = zone[i]->chunk;
+				while (chunk) {
+					print_chunk(chunk);
+					chunk = chunk->next;
+				}
 			}
 			zone[i] = zone[i]->next;
 		}
 	}
 }
-
-/*
-int type_arr[3] = {
-	TINY_MAX,
-	SMALL_MAX,
-	size
-};
-
-
-TINY : 0xA0000
-0xA0020 - 0xA004A : 42 bytes
-0xA006A - 0xA00BE : 84 bytes
-SMALL : 0xAD000
-0xAD020 - 0xADEAD : 3725 bytes
-LARGE : 0xB0000
-0xB0020 - 0xBBEEF : 48847 bytes
-Total : 52698 bytes
-*/

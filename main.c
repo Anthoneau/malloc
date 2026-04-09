@@ -32,14 +32,17 @@ int main(void) {
 	//ft_putendl_fd(str, 1);
 	
 	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
 
 	free(str);
 
 	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
 	
 	free(str2);
 
 	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
 	//free(str);
 
 	//char *test2 = "test string 2";
