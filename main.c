@@ -43,6 +43,11 @@ int main(void) {
 
 	show_alloc_mem();
 	ft_putchar_fd('\n', 1);
+
+	test = malloc(18);
+	ft_strlcpy(test, "salut je m'appell", 18);
+
+	show_alloc_mem();
 	//free(str);
 
 	//char *test2 = "test string 2";
