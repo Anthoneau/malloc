@@ -33,7 +33,7 @@ t_chunk *alloc_zone(size_t size, t_zone **zone, t_type type) {
 	chunk = chunk->next;
 	chunk->used = 0;
 	chunk->size = (*zone)->size - (sizeof(t_chunk) + (*zone)->chunk->size);
-	chunk->real_size = chunk->size;
+	chunk->real_size = 0;
 	chunk->next = NULL;
 
 	//(*zone)->size_available = (*zone)->size - (sizeof(t_chunk) + (*zone)->chunk->size);
@@ -156,15 +156,6 @@ void unset_zone(t_zone *zone) {
 			g_alloc.small = NULL;
 		else if (zone == g_alloc.large)
 			g_alloc.large = NULL;
-		//t_zone *first[3] = {
-		//	g_alloc.tiny,
-		//	g_alloc.small,
-		//	g_alloc.large
-		//};
-		//for (int i = 0; i < 3; i++) {
-		//	if (first[i] == zone)
-		//		first[i] = NULL;
-		//}
 	}
 	else
 		prev->next = next;
