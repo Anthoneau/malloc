@@ -11,27 +11,40 @@
 
 void test_fragmentation(void) {}
 
-void test_tiny() {}
+void test_tiny() {
+	int i = 0;
+	char *str;
+	void *ptr[200];
+	while (i < 200) {
+		str = malloc(128);
+		ft_strlcpy(str, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 128);
+		ptr[i] = str;
+		i++;
+	}
+	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
+	i = 0;
+	while (i < 200) {
+		free(ptr[i]);
+		i++;
+	}
+	show_alloc_mem();
+}
 
 void test_small() {}
 
 void test_large() {}
 
-void simpletest() {}
-
-int main(void) {
-	//ft_printf("pagesize : %d\n", pagesize);
-
+void simpletest() {
 	char *test = "test string";
 	size_t size = ft_strlen(test) + 1;
-	//size_t size = 15;
 	char *str = (char *)malloc(size);
 	ft_strlcpy(str, test, size);
 
 	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
 
 	char *str2 = (char *)malloc(120);
-	//ft_putendl_fd(str, 1);
 	
 	show_alloc_mem();
 	ft_putchar_fd('\n', 1);
@@ -46,56 +59,24 @@ int main(void) {
 	show_alloc_mem();
 	ft_putchar_fd('\n', 1);
 
-	test = malloc(18);
-	ft_strlcpy(test, "salut je m'appell", 18);
+	test = malloc(25);
+	ft_strlcpy(test, "salut je m'appelle pomme", 25);
 
 	show_alloc_mem();
-	//free(str);
+	ft_putchar_fd('\n', 1);
 
-	//char *test2 = "test string 2";
-	//size = ft_strlen(test2) + 1;
-	//char *str2 = (char *)malloc(size);
-	//ft_strlcpy(str2, test2, size);
-	//ft_putendl_fd(str2, 1);
+	free(test);
 
-	//size = 5;
-	//int *arr = malloc(size * sizeof(int));
-	//int i = 0;
-	//while (i < size) {
-	//	arr[i] = i + 1;
-	//	i++;
-	//}
+	show_alloc_mem();
+}
 
-	//i = 0;
-	//while (i < size) {
-	//	ft_putstr_fd("putnbr : ", 1);
-	//	ft_putnbr_fd(arr[i], 1);
-	//	ft_putchar_fd('\n', 1);
-	//	i++;
-	//}
-
-	//void *ptr = malloc(0);
-
-	//free(str);
-	//free(ptr);
-
-	//size_t size = 5;
-	//int *arr = malloc(size * sizeof(int));
-	//int i = 0;
-	//while (i < 100001) {
-	//	printf("i : %d\n", i);
-	//	arr[i] = i + 1;
-	//	i++;
-	//}
-	//i = 0;
-	//while (i < 100001) {
-	//	printf("arr[%d] : %d\n", i, arr[i]);
-	//	i++;
-	//}
-
-	//while (1) {
-	//	sleep(1);
-	//	void *ptr = malloc(10);
-	//}
+int main(void) {
+	//simpletest();
+	//printf("size of t_chunk : %lu\n", sizeof(t_chunk));
+	//printf("size of t_zone : %lu\n", sizeof(t_zone));
+	//printf("size of size_t : %lu\n", sizeof(size_t));
+	//printf("size of unsigned long : %lu\n", sizeof(unsigned long));
+	//printf("size of int : %lu\n", sizeof(int));
+	test_tiny();
 	return 0;
 }

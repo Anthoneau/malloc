@@ -23,7 +23,7 @@
 # define SMALL_MAX (100 * (sizeof(t_chunk) + SMALL_SIZE))
 
 # define MULTIPLE(size) (((size) + (pagesize - 1)) & ~(pagesize - 1))
-
+#include <stdbool.h>
 typedef enum e_type
 {
 	TINY,
@@ -43,7 +43,7 @@ typedef struct s_chunk
 typedef struct s_zone
 {
 	size_t			size;
-	//size_t			size_available;
+	size_t			size_available;
 	size_t			n_of_chunks;
 	t_chunk			*chunk;
 	struct s_zone	*next;

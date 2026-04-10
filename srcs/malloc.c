@@ -36,7 +36,7 @@ t_chunk *alloc_zone(size_t size, t_zone **zone, t_type type) {
 	chunk->real_size = 0;
 	chunk->next = NULL;
 
-	//(*zone)->size_available = (*zone)->size - (sizeof(t_chunk) + (*zone)->chunk->size);
+	(*zone)->size_available = (*zone)->size - (sizeof(t_chunk) + (*zone)->chunk->size);
 	(*zone)->n_of_chunks = 2;
 
 	return ((*zone)->chunk);
@@ -61,6 +61,7 @@ t_chunk *alloc_chunk(size_t size, t_chunk *current) {
 		t_chunk *free_chunk = (t_chunk *)((char *)(current + 1) + current->size);
 		free_chunk->used = 0;
 		free_chunk->size = free_size - (sizeof(t_chunk) + r_size);
+		free_chunk->real_size = 0;
 		free_chunk->next = NULL;
 		current->next = free_chunk;
 		free_chunk->prev = current;
@@ -75,8 +76,8 @@ int check_availability(size_t size, t_zone *zone) {
 	size_t r_size = ALIGN(size);
 	t_chunk *current = zone->chunk;
 
-	//if (zone->size_available < r_size)
-	//	return 0;
+	if (zone->size_available < (r_size + sizeof(t_chunk)))
+		return 0;
 	while (current) {
 		if (current->used == 0 && current->size >= r_size)
 			return 1;
@@ -111,7 +112,9 @@ void *do_alloc(size_t size, t_zone **g_zone, t_type type) {
 	}
 	else { // la zone contient de la place
 		chunk = alloc_chunk(size, zone->chunk);
-		//zone->size_available -= (sizeof(t_chunk) + chunk->size);
+		zone->size_available -= (sizeof(t_chunk) + chunk->size);
+		if (zone->size_available > zone->size)
+			zone->size_available = 0;
 		zone->n_of_chunks++;
 	}
 	return ((chunk == NULL) ? NULL : ((void *)(chunk + 1)));
@@ -151,11 +154,11 @@ void unset_zone(t_zone *zone) {
 
 	if (!prev) {
 		if (zone == g_alloc.tiny)
-			g_alloc.tiny = NULL;
+			g_alloc.tiny = (next) ? next : NULL;
 		else if (zone == g_alloc.small)
-			g_alloc.small = NULL;
+			g_alloc.small = (next) ? next : NULL;
 		else if (zone == g_alloc.large)
-			g_alloc.large = NULL;
+			g_alloc.large = (next) ? next : NULL;
 	}
 	else
 		prev->next = next;
@@ -231,8 +234,13 @@ void show_alloc_mem(void) {
 		g_alloc.large
 	};
 	for (int i = 0; i < 3; i++) {
-		print_zone(type_arr[i], (unsigned long)zone[i]);
+		//print_zone(type_arr[i], (unsigned long)zone[i]);
+		if (!zone[i]) {
+			print_zone(type_arr[i], (unsigned long)zone[i]);
+			continue ;
+		}
 		while (zone[i]) {
+			print_zone(type_arr[i], (unsigned long)zone[i]);
 			if (zone[i]->chunk) {
 				t_chunk *chunk = zone[i]->chunk;
 				while (chunk) {
