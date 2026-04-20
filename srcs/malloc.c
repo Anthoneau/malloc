@@ -139,13 +139,14 @@ void defragmentation(t_chunk *chunk, t_zone *zone) {
 		next->next->prev = chunk;
 	chunk->next = next->next;
 	zone->n_of_chunks--;
+	zone->size_available += sizeof(t_chunk);
 }
 
 t_zone *find_zone(t_chunk *chunk) {
 	t_chunk *temp = chunk;
 	while (temp && temp->prev)
 		temp = temp->prev;
-	return (t_zone *)((temp - 1));
+	return (t_zone *)((t_zone *)temp - 1);
 }
 
 void unset_zone(t_zone *zone) {
@@ -176,6 +177,7 @@ void free(void *ptr) {
 	chunk->used = 0;
 	chunk->real_size = 0;
 	t_zone *zone = find_zone(chunk);
+	zone->size_available += chunk->size;
 	
 	while (chunk->next && chunk->next->used == 0)
 		defragmentation(chunk, zone);
