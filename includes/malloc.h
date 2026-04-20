@@ -6,8 +6,6 @@
 # include <unistd.h>
 # include "libft.h"
 
-# include <stdio.h> // TODO supp
-
 # if defined(__linux__)
 	#define pagesize sysconf(_SC_PAGESIZE)
 # elif defined(__APPLE__)
@@ -23,7 +21,7 @@
 # define SMALL_MAX (100 * (sizeof(t_chunk) + SMALL_SIZE))
 
 # define MULTIPLE(size) (((size) + (pagesize - 1)) & ~(pagesize - 1))
-#include <stdbool.h>
+
 typedef enum e_type
 {
 	TINY,

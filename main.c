@@ -11,17 +11,38 @@
 
 void test_fragmentation(void) {}
 
-void test_tiny() {
+void test_function(t_type type) {
+	size_t size;
+
+	switch (type)
+	{
+	case TINY:
+		size = 128;
+		break ;
+	case SMALL:
+		size = 1024;
+		break ;
+	case LARGE:
+		size = 2000;
+		break ;
+	default:
+		break ;
+	}
+
 	int i = 0;
 	char *str;
 	void *ptr[200];
 	while (i < 200) {
-		str = malloc(128);
-		ft_strlcpy(str, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 128);
+		str = malloc(size);
+		ft_memset(str, 48, size);
 		ptr[i] = str;
 		i++;
 	}
 	show_alloc_mem();
+	// ft_putchar_fd('\n', 1);
+	// ft_putstr_fd("str: ", 1);
+	// ft_putstr_fd(str, 1);
+	// ft_putchar_fd('\n', 1);
 	ft_putchar_fd('\n', 1);
 	i = 0;
 	while (i < 200) {
@@ -30,10 +51,6 @@ void test_tiny() {
 	}
 	show_alloc_mem();
 }
-
-void test_small() {}
-
-void test_large() {}
 
 void simpletest() {
 	char *test = "test string";
@@ -70,13 +87,23 @@ void simpletest() {
 	show_alloc_mem();
 }
 
+void realloc_test() {
+	char *ptr = malloc(15);
+	ft_strlcpy(ptr, "aaaaaaaaaaaaaaa", 15);
+	show_alloc_mem();
+	ptr = realloc(ptr, 10);
+	show_alloc_mem();
+	ptr = realloc(ptr, 120);
+	show_alloc_mem();
+}
+
 int main(void) {
-	//simpletest();
 	//printf("size of t_chunk : %lu\n", sizeof(t_chunk));
 	//printf("size of t_zone : %lu\n", sizeof(t_zone));
-	//printf("size of size_t : %lu\n", sizeof(size_t));
-	//printf("size of unsigned long : %lu\n", sizeof(unsigned long));
-	//printf("size of int : %lu\n", sizeof(int));
-	test_tiny();
+	// simpletest();
+	// test_function(TINY);
+	// test_function(SMALL);
+	// test_function(LARGE);
+	realloc_test();
 	return 0;
 }

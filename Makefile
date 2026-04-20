@@ -21,6 +21,7 @@ RM			=	rm -rf
 SRCS_DIR	=	srcs/
 INCL_DIR	=	includes/
 OBJS_DIR	=	objs/
+EXEC		=	test
 
 #SOURCES
 
@@ -49,7 +50,7 @@ all:		${SYMB}
 
 ${SYMB}:	${NAME}
 			@${SYMLINK} ${NAME} ${SYMB}
-			@echo "${BGREEN}Malloc compiled!${COLOR_END}"
+			@echo -e "${BGREEN}Malloc compiled!${COLOR_END}"
 
 ${NAME}:	${LIBFT} ${OBJS}
 			@${CC} ${LDFLAGS} ${OBJS} ${LIBFT} -o ${NAME}
@@ -68,18 +69,19 @@ ${LIBFT}:
 clean:
 			@${RM} ${OBJS_DIR}
 			@${RM} ${OBJSF}
-			@echo "${BCYAN}Malloc .o files cleaned!${COLOR_END}"
+			@echo -e "${BCYAN}Malloc .o files cleaned!${COLOR_END}"
 
 fclean:		clean
 			@${RM} ${SYMB}
 			@${RM} ${NAME}
+			@${RM} ${EXEC}
 			@make fclean -C libft/
-			@echo "${BBLUE}Malloc files cleaned!${COLOR_END}"
+			@echo -e "${BBLUE}Malloc files cleaned!${COLOR_END}"
 
 re:			fclean all
 
 run:		all
 			@cc main.c ${LIBFT} -o test -g -L. -l${LNNAME}
-			@LD_LIBRARY_PATH=. ./test
+			@LD_LIBRARY_PATH=. ./${EXEC}
 
 .PHONY:		all clean fclean re

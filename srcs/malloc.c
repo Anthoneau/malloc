@@ -195,12 +195,31 @@ void free(void *ptr) {
 // REALLOC
 
 void *realloc(void *ptr, size_t size) {
-	//printf("adress: %p\n", ptr);
-	//printf("size: %zu\n", size);
-	(void)ptr;
-	(void)size;
-	write(1, "realloc\n", 9);
-	return NULL;
+	if (!ptr)
+		return (malloc(size));
+	
+	if (size == 0) {
+		free(ptr);
+		return NULL;
+	}
+
+	t_chunk *chunk = (t_chunk *)ptr - 1;
+	if (!chunk) {
+		free(ptr);
+		return NULL;
+	}
+
+	if (chunk->used == 0)
+		return (malloc(size));
+
+	if (size <= chunk->size) {
+		chunk->real_size = size;
+		return ptr;
+	}
+	void *new_ptr = malloc(size);
+	ft_memcpy(new_ptr, ptr, chunk->real_size);
+	free(ptr);
+	return new_ptr;
 }
 
 // SHOW_ALLOC_MEM

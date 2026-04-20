@@ -6,7 +6,7 @@
 #    By: agoldber < agoldber@student.s19.be >       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/07/27 09:39:13 by agoldber          #+#    #+#              #
-#    Updated: 2025/05/19 17:06:03 by agoldber         ###   ########.fr        #
+#    Updated: 2026/04/20 14:20:07 by agoldber         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -81,7 +81,7 @@ define progress_bar
 	BAR=$$(for i in `seq 1 $$PROGRESS`; do printf "▇"; done); \
 	SPACES=$$(for i in `seq 1 $$((50 - $$PROGRESS))`; do printf " "; done); \
 	printf "\r${BBLUE}Compiling: [$$BAR$$SPACES] $$COMPILED/$(TOTAL_FILES) files${COLOR_END}"; \
-	echo ""; \
+	echo -e ""; \
 	$(eval COMPILED_FILES=$$COMPILED)
 endef
 
@@ -89,14 +89,14 @@ all:		${NAME}
 
 ${NAME}:	${OBJS}
 			@${AR} ${NAME} ${OBJS}
-			@echo "\n${BGREEN}Libft compiled!${COLOR_END}"
+			@echo -e "\n${BGREEN}Libft compiled!${COLOR_END}"
 
 COMPILED_FILES=0
 
 ${OBJS_DIR}%.o : ${SRCS_DIR}%.c | ${OBJSF}
 	@mkdir -p $(dir $@)
 	@${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@
-	@PROGRESS=$$(echo "$$(find ${OBJS_DIR} -type f | wc -l | tr -d ' ') * 100 / ${TOTAL_FILES}" | bc); \
+	@PROGRESS=$$(echo -e "$$(find ${OBJS_DIR} -type f | wc -l | tr -d ' ') * 100 / ${TOTAL_FILES}" | bc); \
 	BAR=$$(seq -s "▇" 0 $$((PROGRESS / 2)) | tr -d '[:digit:]'); \
 	SPACES=$$(seq -s " " 0 $$((50 - PROGRESS / 2)) | tr -d '[:digit:]'); \
 	CURRENT_FILES=$$(find ${OBJS_DIR} -type f | wc -l | tr -d ' '); \
@@ -118,11 +118,11 @@ ${OBJSF}:
 clean:
 			@${RM} ${OBJS_DIR}
 			@${RM} ${OBJSF}
-			@echo "${BCYAN}Libft .o files cleaned!${COLOR_END}"
+			@echo -e "${BCYAN}Libft .o files cleaned!${COLOR_END}"
 
 fclean:		clean
 			@${RM} ${NAME}
-			@echo "${BBLUE}Libft .a files cleaned!${COLOR_END}"
+			@echo -e "${BBLUE}Libft .a files cleaned!${COLOR_END}"
 
 re:			fclean all
 
