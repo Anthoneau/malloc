@@ -1,14 +1,6 @@
 #include "includes/malloc.h"
 #include "includes/libft.h"
 
-#include <sys/mman.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <string.h>
-
-//#include <stdio.h>
-//#include <stdlib.h>
-
 void test_fragmentation(void) {}
 
 void test_function(t_type type) {

@@ -1,4 +1,8 @@
-# malloc
+# malloc - collection of thoughts
+
+**This document served as a collection of my thoughts. It is somewhat like documentation, without really being one. It contains both useful information and noise. It is very poorly structured, and I go back and forth a lot.** \
+**It is also written in French.** \
+**If you are implementing your own malloc, you can read this document hoping to learn something, but keep in mind that it is not complete.**
 
 ## fonctions autorisées
 

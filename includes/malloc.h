@@ -18,7 +18,7 @@
 # define TINY_SIZE 128
 # define TINY_MAX (100 * (sizeof(t_chunk) + TINY_SIZE))
 
-# define SMALL_SIZE 1024
+# define SMALL_SIZE 4096
 # define SMALL_MAX (100 * (sizeof(t_chunk) + SMALL_SIZE))
 
 # define MULTIPLE(size) (((size) + (pagesize - 1)) & ~(pagesize - 1))
