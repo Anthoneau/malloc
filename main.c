@@ -23,7 +23,7 @@ void test_function(t_type type) {
 		size = 1024;
 		break ;
 	case LARGE:
-		size = 2000;
+		size = 40000;
 		break ;
 	default:
 		break ;
@@ -38,11 +38,12 @@ void test_function(t_type type) {
 		ptr[i] = str;
 		i++;
 	}
+	ft_putchar_fd('\n', 1);
 	show_alloc_mem();
-	// ft_putchar_fd('\n', 1);
-	// ft_putstr_fd("str: ", 1);
-	// ft_putstr_fd(str, 1);
-	// ft_putchar_fd('\n', 1);
+	ft_putchar_fd('\n', 1);
+	ft_putstr_fd("str: ", 1);
+	ft_putstr_fd(str, 1);
+	ft_putchar_fd('\n', 1);
 	ft_putchar_fd('\n', 1);
 	i = 0;
 	while (i < 200) {
@@ -88,13 +89,46 @@ void simpletest() {
 }
 
 void realloc_test() {
-	char *ptr = malloc(15);
-	ft_strlcpy(ptr, "aaaaaaaaaaaaaaa", 15);
+	ft_putstr_fd("1 : malloc 10\n", 1);
+	char *p = malloc(10);
 	show_alloc_mem();
-	ptr = realloc(ptr, 10);
+	ft_putchar_fd('\n', 1);
+	ft_putstr_fd("1 : 10 devient 20\n", 1);
+	p = realloc(p, 20);
 	show_alloc_mem();
-	ptr = realloc(ptr, 120);
+	ft_putchar_fd('\n', 1);
+
+	ft_putstr_fd("1 : 20 devient 5\n", 1);
+	p = realloc(p, 5);
 	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
+
+	ft_putstr_fd("2 : malloc 10\n", 1);
+	char *a = malloc(10);
+	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
+	ft_putstr_fd("3 : malloc 10\n", 1);
+	char *b = malloc(10);
+	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
+	ft_putstr_fd("3 : free\n", 1);
+	free(b);
+	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
+	ft_putstr_fd("2 : 10 devient 15\n", 1);
+	a = realloc(a, 15);
+	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
+
+	ft_putstr_fd("3 : malloc 10\n", 1);
+	p = realloc(NULL, 10);
+	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
+
+	ft_putstr_fd("3: free\n", 1);
+	p = realloc(p, 0);
+	show_alloc_mem();
+	ft_putchar_fd('\n', 1);
 }
 
 int main(void) {

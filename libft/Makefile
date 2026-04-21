@@ -36,7 +36,7 @@ FTIS_DIR	=	ft_is/
 FTIS		=	ft_isalnum ft_isalpha ft_isascii ft_isdigit ft_isprint ft_isspace ft_isnum
 
 FTMEM_DIR	=	ft_mem/
-FTMEM		=	ft_bzero ft_calloc ft_memchr ft_memcmp ft_memmove ft_memset
+FTMEM		=	ft_bzero ft_calloc ft_memchr ft_memcmp ft_memmove ft_memset ft_memcpy
 
 FTPUT_DIR	=	ft_put/
 FTPUT		=	ft_putchar_fd ft_putendl_fd ft_putnbr_fd ft_putstr_fd ft_putaddress_fd
@@ -89,14 +89,14 @@ all:		${NAME}
 
 ${NAME}:	${OBJS}
 			@${AR} ${NAME} ${OBJS}
-			@echo -e "\n${BGREEN}Libft compiled!${COLOR_END}"
+			@printf "\n${BGREEN}Libft compiled!${COLOR_END}\n"
 
 COMPILED_FILES=0
 
 ${OBJS_DIR}%.o : ${SRCS_DIR}%.c | ${OBJSF}
 	@mkdir -p $(dir $@)
 	@${CC} ${CFLAGS} ${INCLUDES} -c $< -o $@
-	@PROGRESS=$$(echo -e "$$(find ${OBJS_DIR} -type f | wc -l | tr -d ' ') * 100 / ${TOTAL_FILES}" | bc); \
+	@PROGRESS=$$(echo "$$(find ${OBJS_DIR} -type f | wc -l | tr -d ' ') * 100 / ${TOTAL_FILES}" | bc); \
 	BAR=$$(seq -s "▇" 0 $$((PROGRESS / 2)) | tr -d '[:digit:]'); \
 	SPACES=$$(seq -s " " 0 $$((50 - PROGRESS / 2)) | tr -d '[:digit:]'); \
 	CURRENT_FILES=$$(find ${OBJS_DIR} -type f | wc -l | tr -d ' '); \
@@ -118,11 +118,11 @@ ${OBJSF}:
 clean:
 			@${RM} ${OBJS_DIR}
 			@${RM} ${OBJSF}
-			@echo -e "${BCYAN}Libft .o files cleaned!${COLOR_END}"
+			@printf "${BCYAN}Libft .o files cleaned!${COLOR_END}\n"
 
 fclean:		clean
 			@${RM} ${NAME}
-			@echo -e "${BBLUE}Libft .a files cleaned!${COLOR_END}"
+			@printf "${BBLUE}Libft .a files cleaned!${COLOR_END}\n"
 
 re:			fclean all
 

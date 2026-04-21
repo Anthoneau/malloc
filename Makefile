@@ -50,7 +50,7 @@ all:		${SYMB}
 
 ${SYMB}:	${NAME}
 			@${SYMLINK} ${NAME} ${SYMB}
-			@echo -e "${BGREEN}Malloc compiled!${COLOR_END}"
+			@printf "${BGREEN}Malloc compiled!${COLOR_END}\n"
 
 ${NAME}:	${LIBFT} ${OBJS}
 			@${CC} ${LDFLAGS} ${OBJS} ${LIBFT} -o ${NAME}
@@ -69,14 +69,14 @@ ${LIBFT}:
 clean:
 			@${RM} ${OBJS_DIR}
 			@${RM} ${OBJSF}
-			@echo -e "${BCYAN}Malloc .o files cleaned!${COLOR_END}"
+			@printf "${BCYAN}Malloc .o files cleaned!${COLOR_END}\n"
 
 fclean:		clean
 			@${RM} ${SYMB}
 			@${RM} ${NAME}
 			@${RM} ${EXEC}
 			@make fclean -C libft/
-			@echo -e "${BBLUE}Malloc files cleaned!${COLOR_END}"
+			@printf "${BBLUE}Malloc files cleaned!${COLOR_END}\n"
 
 re:			fclean all
 

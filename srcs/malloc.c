@@ -1,6 +1,7 @@
 #include "../includes/malloc.h"
 
 static t_alloc g_alloc;
+static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // MALLOC
 
@@ -121,13 +122,16 @@ void *do_alloc(size_t size, t_zone **g_zone, t_type type) {
 }
 
 void *malloc(size_t size) {
+	pthread_mutex_lock(&g_mutex);
+	void *result = NULL;
 	if (size <= TINY_SIZE)
-		return do_alloc(size, &g_alloc.tiny, TINY);
+		result = do_alloc(size, &g_alloc.tiny, TINY);
 	else if (size <= SMALL_SIZE)
-		return do_alloc(size, &g_alloc.small, SMALL);
+		result = do_alloc(size, &g_alloc.small, SMALL);
 	else
-		return do_alloc(size, &g_alloc.large, LARGE);
-	return NULL;
+		result = do_alloc(size, &g_alloc.large, LARGE);
+	pthread_mutex_unlock(&g_mutex);
+	return result;
 }
 
 // FREE
@@ -170,6 +174,7 @@ void unset_zone(t_zone *zone) {
 void free(void *ptr) {
 	if (!ptr)
 		return ;
+	pthread_mutex_lock(&g_mutex);
 	t_chunk *chunk = (t_chunk *)ptr - 1;
 	if (!chunk)
 		return ;
@@ -190,36 +195,116 @@ void free(void *ptr) {
 		unset_zone(zone);
 		munmap(zone, zone->size);
 	}
+	pthread_mutex_unlock(&g_mutex);
 }
 
 // REALLOC
 
-void *realloc(void *ptr, size_t size) {
-	if (!ptr)
+void *realloc_issue(void *ptr, size_t size) {
+	if (!ptr) {
+		pthread_mutex_unlock(&g_mutex);
 		return (malloc(size));
-	
+	}	
 	if (size == 0) {
+		pthread_mutex_unlock(&g_mutex);
 		free(ptr);
 		return NULL;
 	}
+	return NULL;
+}
 
-	t_chunk *chunk = (t_chunk *)ptr - 1;
-	if (!chunk) {
-		free(ptr);
-		return NULL;
-	}
+void create_double_chunk(size_t size, t_chunk *chunk, t_zone *zone) {
+	size_t total_size = chunk->size;
+	chunk->size = size;
+	t_chunk *new = (t_chunk *)((char *)(chunk + 1) + (chunk->size));
+	new->next = chunk->next;
+	chunk->next = new;
+	if (new->next)
+		new->next->prev = new;
+	new->used = 0;
+	new->size = total_size - (chunk->size + sizeof(t_chunk));
+	zone->n_of_chunks++;
+	zone->size_available += new->size;
+}
 
-	if (chunk->used == 0)
-		return (malloc(size));
-
-	if (size <= chunk->size) {
-		chunk->real_size = size;
+void *ptr_is_free(void* ptr, size_t requested_size, t_chunk *chunk, t_zone *zone) {
+	size_t size = ALIGN(requested_size);
+	if (chunk->size >= size) {
+		chunk->used = 1;
+		zone->size_available -= chunk->size + sizeof(t_chunk);
+		zone->n_of_chunks++;
+		if (chunk->size - size > sizeof(t_chunk))
+			create_double_chunk(size, chunk, zone);
+		chunk->real_size = requested_size;
+		pthread_mutex_unlock(&g_mutex);
 		return ptr;
 	}
-	void *new_ptr = malloc(size);
-	ft_memcpy(new_ptr, ptr, chunk->real_size);
+	pthread_mutex_unlock(&g_mutex);
+	void *new = malloc(size);
+	pthread_mutex_lock(&g_mutex);
+	if (!new) {
+		chunk->used = 1;
+		zone->size_available -= chunk->size + sizeof(t_chunk);
+		zone->n_of_chunks++;
+		pthread_mutex_unlock(&g_mutex);
+		return ptr;
+	}
+	pthread_mutex_unlock(&g_mutex);
+	return (new);
+}
+
+void chunk_merge(size_t size, t_chunk *chunk, t_zone *zone) {
+	size_t new_size = chunk->size + chunk->next->size + sizeof(t_chunk);
+	chunk->size = new_size;
+	t_chunk *next = chunk->next;
+	chunk->next = next->next;
+	if (next->next)
+		next->next->prev = chunk;
+	zone->n_of_chunks--;
+	zone->size_available -= next->size + sizeof(t_chunk);
+
+	if (chunk->size > size && chunk->size - size > sizeof(t_chunk))
+		create_double_chunk(size, chunk, zone);
+}
+
+void *realloc(void *ptr, size_t requested_size) {
+	pthread_mutex_lock(&g_mutex);
+
+	if (!ptr || requested_size == 0)
+		return realloc_issue(ptr, requested_size);
+	
+	size_t size = ALIGN(requested_size);
+
+	t_chunk *chunk = (t_chunk *)ptr - 1;
+	t_zone *zone = find_zone(chunk);
+	if (chunk->used == 0)
+		return ptr_is_free(ptr, requested_size, chunk, zone);
+
+	if (size <= chunk->size) {
+		if (chunk->size - size > sizeof(t_chunk))
+			create_double_chunk(size, chunk, zone);
+		chunk->real_size = requested_size;
+		pthread_mutex_unlock(&g_mutex);
+		return ptr;
+	}
+	if (size > chunk->size &&
+		chunk->next && chunk->next->used == 0 &&
+		size <= chunk->size + chunk->next->size + sizeof(t_chunk)) {
+		chunk_merge(size, chunk, zone);
+		chunk->real_size = requested_size;
+		pthread_mutex_unlock(&g_mutex);
+		return ptr;
+	}
+
+	pthread_mutex_unlock(&g_mutex);
+	void *new = malloc(size);
+	if (!new)
+		return ptr;
+	pthread_mutex_lock(&g_mutex);
+	ft_memcpy(new, ptr, chunk->real_size);
+	pthread_mutex_unlock(&g_mutex);
 	free(ptr);
-	return new_ptr;
+	return new;
 }
 
 // SHOW_ALLOC_MEM
@@ -232,6 +317,8 @@ void print_zone(char *zone, unsigned long adr) {
 }
 
 void print_chunk(t_chunk *chunk) {
+	//if (chunk->size == 0 || chunk->real_size == 0)
+	//	return ;
 	unsigned long begin = (unsigned long)chunk;
 	unsigned long end = (unsigned long)(chunk + 1) + chunk->real_size;
 
@@ -240,6 +327,8 @@ void print_chunk(t_chunk *chunk) {
 	ft_putaddress_fd(end);
 	ft_putstr_fd(" : ", 1);
 	ft_putnbr_fd(chunk->real_size, 1);
+	ft_putstr_fd(" - ", 1);
+	ft_putnbr_fd(chunk->size, 1);
 	ft_putendl_fd(" bytes", 1);
 }
 
@@ -255,7 +344,6 @@ void show_alloc_mem(void) {
 		g_alloc.large
 	};
 	for (int i = 0; i < 3; i++) {
-		//print_zone(type_arr[i], (unsigned long)zone[i]);
 		if (!zone[i]) {
 			print_zone(type_arr[i], (unsigned long)zone[i]);
 			continue ;

@@ -4,6 +4,7 @@
 # include <stdlib.h>
 # include <sys/mman.h>
 # include <unistd.h>
+# include <pthread.h>
 # include "libft.h"
 
 # if defined(__linux__)
