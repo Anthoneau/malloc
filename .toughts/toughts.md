@@ -479,3 +479,4 @@ La taille reçu sera `2 * 4 octets` donc 8 octets. La `size` sera égale à 8, e
 - [alignement en mémoire](https://fr.wikipedia.org/wiki/Alignement_en_m%C3%A9moire)
 - [playlist youtube de memory management](https://www.youtube.com/watch?v=ObakIXh3mNw&list=PLlqoNzE2bqWulFVmkdoVI9S7Jr0uvPVEP)
 - [What if I try to malloc WAY too much memory?](https://www.youtube.com/watch?v=Fq9chEBQMFE)
+- [page size discussion](https://stackoverflow.com/questions/11543748/why-is-the-page-size-of-linux-x86-4-kb-how-is-that-calculated)
