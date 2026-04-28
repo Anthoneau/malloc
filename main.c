@@ -123,6 +123,34 @@ void realloc_test() {
 	ft_putchar_fd('\n', 1);
 }
 
+void *multy_malloc(void *arg) {
+	for (int i = 0; i < 500000; i++) {
+		if (i == 1000)
+			ft_putnbr_fd(1000, 1);
+		else if (i == 10000)
+			ft_putnbr_fd(10000, 1);
+		else if (i == 100000)
+			ft_putnbr_fd(10000, 1);
+		else if (i == 1000000)
+			ft_putnbr_fd(100000, 1);
+		else if (i == 500000)
+			ft_putnbr_fd(500000, 1);
+		malloc(5);
+	}
+	return NULL;
+}
+
+void multy_threaded() {
+	pthread_t threads[20];
+	for (int i = 0; i < 20; i++) {
+		pthread_create(&threads[i], NULL, &multy_malloc, NULL);
+	}
+
+	for (int i = 0; i < 20; i++) {
+		pthread_join(threads[i], NULL);
+	}
+}
+
 int main(void) {
 	//printf("size of t_chunk : %lu\n", sizeof(t_chunk));
 	//printf("size of t_zone : %lu\n", sizeof(t_zone));
@@ -130,6 +158,8 @@ int main(void) {
 	// test_function(TINY);
 	// test_function(SMALL);
 	// test_function(LARGE);
-	realloc_test();
+	// realloc_test();
+	multy_threaded();
+	// multy_malloc(NULL);
 	return 0;
 }
