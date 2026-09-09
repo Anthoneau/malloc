@@ -58,7 +58,7 @@ t_chunk *alloc_chunk(size_t size, t_chunk *current) {
 	current->used = 1;
 	current->size = r_size;
 	current->real_size = size;
-	if (free_size != r_size && (free_size - (sizeof(t_chunk) + r_size)) >= sizeof(t_chunk)) {
+	if (free_size != r_size && (free_size - (sizeof(t_chunk) + r_size)) > sizeof(t_chunk)) {
 		t_chunk *free_chunk = (t_chunk *)((char *)(current + 1) + current->size);
 		free_chunk->used = 0;
 		free_chunk->size = free_size - (sizeof(t_chunk) + r_size);
