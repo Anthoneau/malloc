@@ -2,8 +2,6 @@ HOST		=	$(HOSTTYPE)
 
 ifeq ($(HOST),)
 	HOST	:=	$(shell uname -m)_$(shell uname -s)
-else
-	HOST	:=	$(HOSTTYPE)
 endif
 
 #BASE
@@ -84,4 +82,4 @@ run:		all
 			@cc main.c ${LIBFT} -o test -g -L. -l${LNNAME}
 			@LD_LIBRARY_PATH=. ./${EXEC}
 
-.PHONY:		all clean fclean re
+.PHONY:		all clean fclean re run

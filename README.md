@@ -36,9 +36,11 @@ While the implementation itself is relatively straightforward, the real challeng
 malloc/
 |
 ├── include/
-|   └── malloc.h       # Main header
+	├── libft.h			# Libft header
+|   └── malloc.h		# Main header
+├── libft/				# Personal library
 └── src/
-	└── malloc.c       # This lonely file contains all the functions
+	└── malloc.c		# This lonely file contains all the functions
 ```
 
 ---
@@ -180,7 +182,7 @@ If a suitable `zone` already exists, we iterate through its `chunks` to find a f
 
 In my implementation, when a `zone` is newly created, it contains two `chunks`. One corresponds to the program’s request, and the other represents all remaining available memory. When an allocation is made, this free `chunk` is split into two parts: one used part and one free part.
 
-For example, a free `zone` of 4096 bytes becomes a used `chunk` of size 1 and a free `chunk` of size 4095 after a first `malloc(1)`.
+For example, a free `zone` of 4096 bytes (size of t_zone not included) becomes a used `chunk` of size 1 and a free `chunk` of size 4095 after a first `malloc(1)`.
 
 ```text
 ┌───────────────┐    ┌───────────────┐
@@ -241,6 +243,7 @@ Instead of leaving everything as is, `free` will check the neighbors of the 100 
 ```
 
 Once done, `free` will check the number of remaining chunks in the zone, see that only one remains, and call `munmap`.
+(When a zone is in use, there are at least 2 chunks, a used one and a free one. Therefore, if there is only one, it must be free and we can `munmap` it.)
 
 ---
 
