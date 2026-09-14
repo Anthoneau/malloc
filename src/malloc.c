@@ -5,15 +5,29 @@ static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // MALLOC
 
+void create_first_chunks(size_t size, t_zone **zone)
+{
+	t_chunk *chunk = (*zone)->chunk;
+	chunk->used = 1;
+	chunk->size = ALIGN(size);
+	chunk->real_size = size;
+	chunk->next = NULL;
+	chunk->prev = NULL;
+
+	chunk->next = (t_chunk *)((char *)(chunk + 1) + (chunk->size));
+	chunk->next->prev = chunk;
+	chunk = chunk->next;
+	chunk->used = 0;
+	chunk->size = (*zone)->size - (sizeof(t_zone) + 2 * sizeof(t_chunk) + (*zone)->chunk->size);
+	chunk->real_size = 0;
+	chunk->next = NULL;
+}
+
 t_chunk *alloc_zone(size_t size, t_zone **zone, t_type type)
 {
 	int prot_flag = PROT_READ | PROT_WRITE;
 	int map_flag = MAP_PRIVATE | MAP_ANONYMOUS;
-	int type_arr[3] = {
-		TINY_MAX,
-		SMALL_MAX,
-		size
-	};
+	int type_arr[3] = { TINY_MAX, SMALL_MAX, sizeof(t_zone) + 2 * sizeof(t_chunk) + size };
 	size_t zone_size = MULTIPLE(type_arr[type]);
 
 	(*zone) = (t_zone *)mmap(NULL, zone_size, prot_flag, map_flag, -1, 0);
@@ -24,27 +38,27 @@ t_chunk *alloc_zone(size_t size, t_zone **zone, t_type type)
 	(*zone)->next = NULL;
 	(*zone)->chunk = (t_chunk *)((*zone) + 1);
 
-	t_chunk *chunk = (*zone)->chunk;
-	chunk->used = 1;
-	chunk->size = ALIGN(size);
-	chunk->real_size = size;
-	chunk->prev = NULL;
-	
-	chunk->next = (t_chunk *)((char *)(chunk + 1) + (chunk->size));
-	chunk->next->prev = chunk;
-	chunk = chunk->next;
-	chunk->used = 0;
-	chunk->size = (*zone)->size - (sizeof(t_chunk) + (*zone)->chunk->size);
-	chunk->real_size = 0;
-	chunk->next = NULL;
+	create_first_chunks(size, zone);
 
-	(*zone)->size_available = (*zone)->size - (sizeof(t_chunk) + (*zone)->chunk->size);
+	(*zone)->size_available = (*zone)->size - (sizeof(t_zone) + sizeof(t_chunk) + (*zone)->chunk->size);
 	(*zone)->n_of_chunks = 2;
 
 	return ((*zone)->chunk);
 }
 
-t_chunk *alloc_chunk(size_t size, t_chunk *current)
+void fragment_chunk(t_chunk *current, size_t free_size, size_t r_size) {
+	t_chunk *free_chunk = (t_chunk *)((char *)(current + 1) + current->size);
+	free_chunk->used = 0;
+	free_chunk->size = free_size - (sizeof(t_chunk) + r_size);
+	free_chunk->real_size = 0;
+	free_chunk->next = current->next;
+	free_chunk->prev = current;
+	if (free_chunk->next)
+		free_chunk->next->prev = free_chunk;
+	current->next = free_chunk;
+}
+
+t_chunk *alloc_chunk(size_t size, t_chunk *current, t_zone *zone)
 {
 	size_t r_size = ALIGN(size);
 	while (current)
@@ -64,13 +78,8 @@ t_chunk *alloc_chunk(size_t size, t_chunk *current)
 	if	(free_size != r_size && free_size > (sizeof(t_chunk) + r_size) &&
 		(free_size - (sizeof(t_chunk) + r_size)) > sizeof(t_chunk))
 	{
-		t_chunk *free_chunk = (t_chunk *)((char *)(current + 1) + current->size);
-		free_chunk->used = 0;
-		free_chunk->size = free_size - (sizeof(t_chunk) + r_size);
-		free_chunk->real_size = 0;
-		free_chunk->next = current->next;
-		current->next = free_chunk;
-		free_chunk->prev = current;
+		fragment_chunk(current, free_size, r_size);
+		zone->n_of_chunks++;
 	}
 	else
 		current->size = free_size;
@@ -112,24 +121,18 @@ void *do_alloc(size_t size, t_zone **g_zone, t_type type)
 	t_chunk *chunk = NULL;
 	if (zone == NULL)
 	{
+		chunk = alloc_zone(size, (prev == NULL) ? g_zone : &prev->next, type);
 		if (prev == NULL)
-		{
-			chunk = alloc_zone(size, g_zone, type);
 			(*g_zone)->prev = NULL;
-		}
 		else
-		{
-			chunk = alloc_zone(size, &prev->next, type);
 			prev->next->prev = prev;
-		}
 	}
 	else
 	{
-		chunk = alloc_chunk(size, zone->chunk);
+		chunk = alloc_chunk(size, zone->chunk, zone);
 		zone->size_available -= (sizeof(t_chunk) + chunk->size);
 		if (zone->size_available > zone->size)
 			zone->size_available = 0;
-		zone->n_of_chunks++;
 	}
 	return ((chunk == NULL) ? NULL : ((void *)(chunk + 1)));
 }
@@ -164,7 +167,7 @@ void defragmentation(t_chunk *chunk, t_zone *zone)
 t_zone *find_zone(t_chunk *chunk)
 {
 	t_chunk *temp = chunk;
-	while (temp && temp && temp->prev)
+	while (temp && temp->prev)
 		temp = temp->prev;
 	return (t_zone *)((t_zone *)temp - 1);
 }
@@ -191,12 +194,10 @@ void unset_zone(t_zone *zone)
 
 void free(void *ptr)
 {
-	pthread_mutex_lock(&g_mutex);
 	if (!ptr)
 		return ;
+	pthread_mutex_lock(&g_mutex);
 	t_chunk *chunk = (t_chunk *)ptr - 1;
-	if (!chunk)
-		return ;
 
 	chunk->used = 0;
 	chunk->real_size = 0;
@@ -228,12 +229,8 @@ void *realloc_issue(void *ptr, size_t size)
 		pthread_mutex_unlock(&g_mutex);
 		return (malloc(size));
 	}
-	if (size == 0)
-	{
-		pthread_mutex_unlock(&g_mutex);
-		free(ptr);
-		return NULL;
-	}
+	pthread_mutex_unlock(&g_mutex);
+	free(ptr);
 	return NULL;
 }
 
@@ -243,6 +240,7 @@ void create_double_chunk(size_t size, t_chunk *chunk, t_zone *zone)
 	chunk->size = size;
 	t_chunk *new = (t_chunk *)((char *)(chunk + 1) + (chunk->size));
 	new->next = chunk->next;
+	new->prev = chunk;
 	chunk->next = new;
 	if (new->next)
 		new->next->prev = new;
@@ -295,7 +293,7 @@ void chunk_merge(size_t size, t_chunk *chunk, t_zone *zone)
 		create_double_chunk(size, chunk, zone);
 }
 
-void *realloc(void *ptr, size_t requested_size)
+void *realloc(void *ptr, size_t requested_size) //TODO check les changements de zone
 {
 	pthread_mutex_lock(&g_mutex);
 

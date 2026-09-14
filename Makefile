@@ -79,7 +79,11 @@ fclean:		clean
 re:			fclean all
 
 run:		all
-			@cc main.c ${LIBFT} -o test -g -L. -l${LNNAME}
+			@cc main.c ${LIBFT} -o ${EXEC} -g -L. -l${LNNAME}
 			@LD_LIBRARY_PATH=. ./${EXEC}
+
+stress:		all
+			@cc stress_test.c ${LIBFT} -o stress -g -L. -l${LNNAME}
+			@LD_LIBRARY_PATH=. ./stress
 
 .PHONY:		all clean fclean re run
