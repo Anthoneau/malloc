@@ -293,7 +293,7 @@ void chunk_merge(size_t size, t_chunk *chunk, t_zone *zone)
 		create_double_chunk(size, chunk, zone);
 }
 
-void *realloc(void *ptr, size_t requested_size) //TODO check les changements de zone
+void *realloc(void *ptr, size_t requested_size)
 {
 	pthread_mutex_lock(&g_mutex);
 
