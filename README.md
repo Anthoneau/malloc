@@ -35,7 +35,7 @@ While the implementation itself is relatively straightforward, the real challeng
 ```text
 malloc/
 |
-├── include/
+├── includes/
 	├── libft.h			# Libft header
 |   └── malloc.h		# Main header
 ├── libft/				# Personal library
@@ -92,10 +92,11 @@ A `chunk` represents an allocation. It contains information about the memory blo
 typedef struct s_chunk
 {
 	int				used;
-	size_t			size;
-	size_t			real_size;
+	size_t			align_size;
+	size_t			req_size;
 	struct s_chunk	*next;
 	struct s_chunk	*prev;
+	void			*_padding; // 40 à 48, aligné à 16 avec _padding
 }	t_chunk;
 ```
 
@@ -124,8 +125,10 @@ typedef struct s_zone
 	size_t			size_available;
 	size_t			n_of_chunks;
 	t_chunk			*chunk;
+	t_type			type;
 	struct s_zone	*next;
 	struct s_zone	*prev;
+	void			*_padding; // 56 à 64
 }	t_zone;
 ```
 
@@ -176,6 +179,8 @@ Once the size is aligned, we determine in which `zone` this allocation should go
 
 If a suitable `zone` already exists, we iterate through its `chunks` to find a free block large enough. When a block is found, it can be split to match the requested size exactly. If no `zone` exists yet for this type of allocation, a new one is created using `mmap`, and its first `chunk` is initialized.
 
+The structures t_chunk and t_zone are already aligned with the memory due to the padding.
+
 ---
 
 ### Fragmentation and split
@@ -210,7 +215,7 @@ After malloc(100):
 
 The `free` function does not immediately return memory to the system. It first marks the `chunk` as free by updating its flag. Then, it checks neighboring `chunks` to see if they are also free. If so, it merges the blocks to reduce fragmentation.
 
-This mechanism helps rebuild larger free blocks and optimize future allocations. Only when an entire `zone` becomes unused do we call `munmap` to return it to the system.
+This mechanism helps rebuild larger free blocks and optimize future allocations. Only when an entire `zone` becomes unused and has neighboor do we call `munmap` to return it to the system.
 
 Example with 2 free blocks and 1 used block:
 
@@ -244,6 +249,8 @@ Instead of leaving everything as is, `free` will check the neighbors of the 100 
 
 Once done, `free` will check the number of remaining chunks in the zone, see that only one remains, and call `munmap`.
 (When a zone is in use, there are at least 2 chunks, a used one and a free one. Therefore, if there is only one, it must be free and we can `munmap` it.)
+
+The free functions checks if the pointer in the parameter is an allocation of my malloc and if not, it does nothing.
 
 ---
 
@@ -319,6 +326,10 @@ cc main.c -L./malloc -lft_malloc
 
 ```bash
 LD_LIBRARY_PATH=./malloc ./your_program
+```
+or
+```bash
+LD_PRELOAD=./libft_malloc.so ./your_program
 ```
 
 > *This will override the system malloc for the current process.*

@@ -1,5 +1,7 @@
 #include "includes/malloc.h"
 #include "includes/libft.h"
+#include <stdio.h>
+#include <stdint.h>
 
 void test_function(t_type type) {
 	size_t size;
@@ -31,10 +33,10 @@ void test_function(t_type type) {
 	ft_putchar_fd('\n', 1);
 	show_alloc_mem();
 	ft_putchar_fd('\n', 1);
-	ft_putstr_fd("str: ", 1);
-	ft_putstr_fd(str, 1);
-	ft_putchar_fd('\n', 1);
-	ft_putchar_fd('\n', 1);
+	//ft_putstr_fd("str: ", 1);
+	//ft_putstr_fd(str, 1);
+	//ft_putchar_fd('\n', 1);
+	//ft_putchar_fd('\n', 1);
 	i = 0;
 	while (i < 200) {
 		free(ptr[i]);
@@ -243,16 +245,82 @@ void multi_threaded() {
 	ft_putendl_fd("mutex detruit", 1);
 }
 
+void aligned_test() {
+	int it = 4;
+	char *tiny[it];
+	char *small[it];
+	char *large[it];
+
+	ft_putendl_fd("tiny malloc", 1);
+	for (int i = 0; i < it; i++)
+	{
+		tiny[it] = malloc(20);
+		printf("%p mod16=%lu\n", tiny[it], (uintptr_t)tiny[it] % 16);
+	}
+
+	ft_putendl_fd("small malloc", 1);
+	for (int i = 0; i < it; i++)
+	{
+		small[it] = malloc(200);
+		printf("%p mod16=%lu\n", small[it], (uintptr_t)small[it] % 16);
+	}
+
+	ft_putendl_fd("large malloc", 1);
+	for (int i = 0; i < it; i++)
+	{
+		large[it] = malloc(100000);
+		printf("%p mod16=%lu\n", large[it], (uintptr_t)large[it] % 16);
+	}
+
+	show_alloc_mem();
+
+	for (int i = 0; i < it; i++)
+	{
+		if (small[it])
+			free(small[it]);
+	}
+	for (int i = 0; i < it; i++)
+	{
+		if (tiny[it])
+			free(tiny[it]);
+	}
+	for (int i = 0; i < it; i++)
+	{
+		if (large[it])
+			free(large[it]);
+	}
+}
+
+void invalid_pointer() {
+	char *addr = malloc(16);
+	free(NULL);
+	free(addr + 5);
+	if (realloc(addr + 5, 10) == NULL)
+		write(1, "Bonjour\n", 8);
+}
+
 int main(void) {
 	//ft_printf("size of t_chunk : %d\n", sizeof(t_chunk));
 	//printf("size of t_zone : %lu\n", sizeof(t_zone));
-	//simpletest();
-	//test_function(TINY);
-	//test_function(SMALL);
-	//test_function(LARGE);
+	//printf("size of t_zone : %lu\n", sizeof(t_zone) % 16);
+	simpletest();
+	test_function(TINY);
+	test_function(SMALL);
+	test_function(LARGE);
 	realloc_test();
-	//defragmentation_test();
-	//multi_threaded();
+	defragmentation_test();
+	multi_threaded();
 	//multi_malloc(NULL);
+	aligned_test();
+	invalid_pointer();
+
+	//void *ptr = malloc((size_t)1 << 46);
+
+	//void *ptr = malloc((size_t)-1);
+	//show_alloc_mem();
+	//printf("%p\n", ptr);
+
+	//char *a = malloc(10);
+	//realloc(a, (size_t)1 << 46);
 	return 0;
 }

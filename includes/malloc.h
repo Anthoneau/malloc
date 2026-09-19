@@ -2,6 +2,7 @@
 # define _MALLOC_H
 
 # include <stdlib.h>
+# include <stdint.h>
 # include <sys/mman.h>
 # include <unistd.h>
 # include <pthread.h>
@@ -33,10 +34,11 @@ typedef enum e_type
 typedef struct s_chunk
 {
 	int				used;
-	size_t			size;
-	size_t			real_size;
+	size_t			align_size;
+	size_t			req_size;
 	struct s_chunk	*next;
 	struct s_chunk	*prev;
+	void			*_padding; // 40 à 48, aligné à 16 avec _padding
 }	t_chunk;
 
 typedef struct s_zone
@@ -45,8 +47,10 @@ typedef struct s_zone
 	size_t			size_available;
 	size_t			n_of_chunks;
 	t_chunk			*chunk;
+	t_type			type;
 	struct s_zone	*next;
 	struct s_zone	*prev;
+	void			*_padding; // 56 à 64
 }	t_zone;
 
 typedef struct s_alloc

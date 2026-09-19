@@ -42,8 +42,6 @@ MAKEFLAGS	+=	--no-print-directory
 OBJSF		=	.cache_exists
 DEPS		=	${OBJS:.o=.d}
 
--include ${DEPS}
-
 all:		${SYMB}
 
 ${SYMB}:	${NAME}
@@ -87,3 +85,5 @@ stress:		all
 			@LD_LIBRARY_PATH=. ./stress
 
 .PHONY:		all clean fclean re run
+
+-include ${DEPS}

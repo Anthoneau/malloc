@@ -87,4 +87,5 @@ char	*get_next_line(int fd);
 void	ft_swap(int *i, int *j);
 void	free_array(char **arr);
 void	ft_free(void *pointer);
+void	ft_putsize_t_fd(size_t n, int fd);
 #endif
